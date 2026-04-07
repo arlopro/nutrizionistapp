@@ -20,4 +20,15 @@ enum ActivityLevel: string
             self::VeryActive => 'Molto attivo',
         };
     }
+
+    public function multiplier(): float
+    {
+        return match ($this) {
+            self::Sedentary => 1.2,
+            self::Light => 1.375,
+            self::Moderate => 1.55,
+            self::Active => 1.725,
+            self::VeryActive => 1.9,
+        };
+    }
 }

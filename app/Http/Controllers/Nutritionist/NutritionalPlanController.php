@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Nutritionist;
 
+use App\Enums\ActivityLevel;
+use App\Enums\ClientGoal;
+use App\Enums\Gender;
 use App\Enums\MealType;
 use App\Enums\PlanStatus;
 use App\Http\Controllers\Controller;
@@ -9,6 +12,7 @@ use App\Models\ClientProfile;
 use App\Models\Food;
 use App\Models\NutritionalPlan;
 use App\Models\Recipe;
+use App\Services\TdeeCalculator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -45,7 +49,7 @@ class NutritionalPlanController extends Controller
     {
         $clients = $request->user()->clients()
             ->with('user:id,name')
-            ->get(['client_profiles.id', 'user_id']);
+            ->get(['client_profiles.id', 'user_id', 'date_of_birth', 'gender', 'height_cm', 'initial_weight_kg', 'activity_level', 'goal']);
 
         $templates = NutritionalPlan::where('nutritionist_id', $request->user()->id)
             ->templates()
@@ -56,7 +60,39 @@ class NutritionalPlanController extends Controller
             'clients' => $clients,
             'statuses' => collect(PlanStatus::cases())->map(fn ($s) => ['value' => $s->value, 'label' => $s->label()]),
             'templates' => $templates,
+            'activityLevels' => collect(ActivityLevel::cases())->map(fn ($a) => ['value' => $a->value, 'label' => $a->label()]),
+            'goals' => collect(ClientGoal::cases())->map(fn ($g) => ['value' => $g->value, 'label' => $g->label()]),
+            'genders' => collect(Gender::cases())->map(fn ($g) => ['value' => $g->value, 'label' => $g->label()]),
         ]);
+    }
+
+    public function calculateTdee(Request $request)
+    {
+        $validated = $request->validate([
+            'client_id' => 'nullable|exists:client_profiles,id',
+            'weight_kg' => 'required|numeric|min:20|max:400',
+            'height_cm' => 'required|numeric|min:50|max:300',
+            'age' => 'required|integer|min:1|max:150',
+            'gender' => 'required|string',
+            'activity_level' => 'required|string',
+            'goal' => 'nullable|string',
+            'formula' => 'nullable|string|in:mifflin,harris_benedict',
+        ]);
+
+        if (!empty($validated['client_id'])) {
+            $client = ClientProfile::findOrFail($validated['client_id']);
+            $this->authorize('view', $client);
+        }
+
+        return response()->json(TdeeCalculator::calculate(
+            weightKg: (float) $validated['weight_kg'],
+            heightCm: (float) $validated['height_cm'],
+            age: (int) $validated['age'],
+            gender: Gender::from($validated['gender']),
+            activityLevel: ActivityLevel::from($validated['activity_level']),
+            goal: !empty($validated['goal']) ? ClientGoal::from($validated['goal']) : null,
+            formula: $validated['formula'] ?? 'mifflin',
+        ));
     }
 
     public function store(Request $request)

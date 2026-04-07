@@ -43,6 +43,7 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
     Route::post('clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])->name('clients.send-invitation');
     Route::resource('foods', FoodController::class);
     Route::resource('recipes', RecipeController::class);
+    Route::post('plans/calculate-tdee', [NutritionalPlanController::class, 'calculateTdee'])->name('plans.calculate-tdee');
     Route::resource('plans', NutritionalPlanController::class);
     Route::get('templates', [NutritionalPlanController::class, 'templates'])->name('plans.templates');
     Route::post('plans/{plan}/save-as-template', [NutritionalPlanController::class, 'saveAsTemplate'])->name('plans.save-as-template');
