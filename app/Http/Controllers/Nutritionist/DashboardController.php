@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Nutritionist;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\CheckIn;
+use App\Models\NutritionalPlan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -17,6 +18,7 @@ class DashboardController extends Controller
 
         $clientCount       = $user->clients()->count();
         $activeClientCount = $user->clients()->active()->count();
+        $planCount         = NutritionalPlan::where('nutritionist_id', $user->id)->count();
 
         $todayAppointments = Appointment::where('nutritionist_id', $user->id)
             ->whereDate('starts_at', today())
@@ -99,6 +101,7 @@ class DashboardController extends Controller
                 'clientCount'           => $clientCount,
                 'activeClientCount'     => $activeClientCount,
                 'todayAppointmentCount' => $todayAppointments->count(),
+                'planCount'             => $planCount,
             ],
             'todayAppointments'    => $todayAppointments,
             'upcomingAppointments' => $upcomingAppointments,
