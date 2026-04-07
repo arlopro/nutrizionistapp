@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { Plus, Search, User, Mail, Phone, ChevronRight } from 'lucide-vue-next';
+import { Plus, Search, User, Mail, Phone, ChevronRight, Target } from 'lucide-vue-next';
 
 const props = defineProps<{
     clients: any;
@@ -34,6 +34,23 @@ function statusColor(s: string) {
 function statusLabel(s: string) {
     return { active: 'Attivo', inactive: 'Inattivo', archived: 'Archiviato' }[s] || s;
 }
+
+function goalLabel(g: string) {
+    const map: Record<string, string> = {
+        weight_loss: 'Perdita peso',
+        weight_gain: 'Aumento peso',
+        maintenance: 'Mantenimento',
+        muscle_gain: 'Massa muscolare',
+        health: 'Salute',
+    };
+    return map[g] || null;
+}
+
+function clientInitials(client: any): string {
+    const first = client.user?.name?.charAt(0)?.toUpperCase() || '';
+    const last = client.user?.last_name?.charAt(0)?.toUpperCase() || '';
+    return first + last || first;
+}
 </script>
 
 <template>
@@ -51,6 +68,27 @@ function statusLabel(s: string) {
                 </Link>
             </div>
         </template>
+
+        <!-- Flash message -->
+        <div v-if="$page.props.flash?.success" class="mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+            {{ $page.props.flash.success }}
+        </div>
+
+        <!-- Stats bar -->
+        <div v-if="clients.total > 0" class="mb-6 grid grid-cols-3 gap-3">
+            <div class="rounded-xl bg-white border border-gray-100 shadow-sm px-4 py-3 text-center">
+                <p class="text-2xl font-bold text-gray-900">{{ clients.total }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Totale</p>
+            </div>
+            <div class="rounded-xl bg-white border border-gray-100 shadow-sm px-4 py-3 text-center">
+                <p class="text-2xl font-bold text-green-600">{{ clients.data.filter((c: any) => c.status === 'active').length }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Attivi</p>
+            </div>
+            <div class="rounded-xl bg-white border border-gray-100 shadow-sm px-4 py-3 text-center">
+                <p class="text-2xl font-bold text-gray-400">{{ clients.data.filter((c: any) => c.status === 'archived').length }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Archiviati</p>
+            </div>
+        </div>
 
         <!-- Filters -->
         <div class="mb-6 flex flex-col sm:flex-row gap-3">
@@ -95,17 +133,23 @@ function statusLabel(s: string) {
                 :href="route('nutritionist.clients.show', client.id)"
                 class="flex items-center gap-4 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm hover:shadow-md hover:border-primary-100 transition group"
             >
-                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white text-lg font-bold flex-shrink-0">
-                    {{ client.user?.name?.charAt(0)?.toUpperCase() }}
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white text-base font-bold flex-shrink-0">
+                    {{ clientInitials(client) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900">{{ client.user?.name }}</p>
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm font-semibold text-gray-900">{{ client.user?.name }} {{ client.user?.last_name }}</p>
+                        <span v-if="client.goal && goalLabel(client.goal)" class="hidden sm:inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                            <Target class="h-3 w-3" />
+                            {{ goalLabel(client.goal) }}
+                        </span>
+                    </div>
                     <div class="flex items-center gap-3 mt-1">
                         <span class="flex items-center gap-1 text-xs text-gray-500">
                             <Mail class="h-3 w-3" />
                             {{ client.user?.email }}
                         </span>
-                        <span v-if="client.user?.phone" class="flex items-center gap-1 text-xs text-gray-500">
+                        <span v-if="client.user?.phone" class="hidden sm:flex items-center gap-1 text-xs text-gray-500">
                             <Phone class="h-3 w-3" />
                             {{ client.user?.phone }}
                         </span>

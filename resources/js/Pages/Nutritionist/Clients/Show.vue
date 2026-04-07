@@ -3,9 +3,19 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import WeightChart from '@/Components/WeightChart.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { ArrowLeft, Edit, Mail, Phone, Calendar, Ruler, Weight, Target, Activity, ClipboardCheck, UtensilsCrossed, TrendingDown, Send } from 'lucide-vue-next';
+import { ArrowLeft, Edit, Mail, Phone, Calendar, Ruler, Weight, Target, Activity, ClipboardCheck, UtensilsCrossed, TrendingDown, Send, CalendarDays, Archive, ArchiveRestore } from 'lucide-vue-next';
 
 const props = defineProps<{ client: any }>();
+
+const archiving = ref(false);
+function toggleArchive() {
+    archiving.value = true;
+    const newStatus = props.client.status === 'archived' ? 'active' : 'archived';
+    router.put(route('nutritionist.clients.update', props.client.id), { ...props.client, name: props.client.user?.name, email: props.client.user?.email, status: newStatus }, {
+        preserveScroll: true,
+        onFinish: () => { archiving.value = false; },
+    });
+}
 
 const weightWithHistory = computed(() =>
     (props.client.check_ins ?? []).filter((c: any) => c.weight_kg)
@@ -68,12 +78,33 @@ function formatDateTime(d: string) {
                 <Link :href="route('nutritionist.clients.index')" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
                     <ArrowLeft class="h-5 w-5" />
                 </Link>
-                <h1 class="text-xl font-semibold text-gray-900">{{ client.user?.name }}</h1>
-                <span :class="['rounded-full px-2.5 py-1 text-xs font-medium ml-2', statusColor(client.status)]">
+                <h1 class="text-xl font-semibold text-gray-900">{{ client.user?.name }} {{ client.user?.last_name }}</h1>
+                <span :class="['rounded-full px-2.5 py-1 text-xs font-medium', statusColor(client.status)]">
                     {{ statusLabel(client.status) }}
                 </span>
+                <div class="ml-auto flex items-center gap-2">
+                    <button
+                        type="button"
+                        @click="toggleArchive"
+                        :disabled="archiving"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition disabled:opacity-40"
+                    >
+                        <ArchiveRestore v-if="client.status === 'archived'" class="h-4 w-4" />
+                        <Archive v-else class="h-4 w-4" />
+                        {{ client.status === 'archived' ? 'Ripristina' : 'Archivia' }}
+                    </button>
+                    <Link :href="route('nutritionist.clients.edit', client.id)" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:from-primary-600 hover:to-primary-700 transition shadow-sm">
+                        <Edit class="h-4 w-4" />
+                        Modifica
+                    </Link>
+                </div>
             </div>
         </template>
+
+        <!-- Flash message -->
+        <div v-if="$page.props.flash?.success" class="mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+            {{ $page.props.flash.success }}
+        </div>
 
         <div class="grid gap-6 lg:grid-cols-3">
             <!-- Left column: profile info -->
@@ -82,10 +113,6 @@ function formatDateTime(d: string) {
                 <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-base font-semibold text-gray-900">Informazioni personali</h2>
-                        <Link :href="route('nutritionist.clients.edit', client.id)" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700">
-                            <Edit class="h-4 w-4" />
-                            Modifica
-                        </Link>
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="flex items-center gap-2 text-sm">
@@ -182,6 +209,28 @@ function formatDateTime(d: string) {
 
             <!-- Right column: plans, check-ins, appointments -->
             <div class="space-y-6">
+                <!-- Upcoming appointments -->
+                <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <CalendarDays class="h-5 w-5 text-gray-400" />
+                        <h2 class="text-base font-semibold text-gray-900">Prossimi appuntamenti</h2>
+                    </div>
+                    <div v-if="!client.appointments?.length" class="text-center py-4 text-sm text-gray-400">
+                        Nessun appuntamento
+                    </div>
+                    <div v-else class="space-y-2">
+                        <div v-for="apt in client.appointments" :key="apt.id" class="rounded-xl bg-gray-50 px-3 py-2.5">
+                            <p class="text-sm font-medium text-gray-900">
+                                {{ new Date(apt.starts_at).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' }) }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-0.5">
+                                {{ new Date(apt.starts_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) }}
+                                <span v-if="apt.ends_at"> – {{ new Date(apt.ends_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Plans -->
                 <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
                     <div class="flex items-center gap-2 mb-4">
