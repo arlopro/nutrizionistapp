@@ -18,6 +18,7 @@ use App\Http\Controllers\Nutritionist\NutritionalPlanController;
 use App\Http\Controllers\Nutritionist\PlanMealController;
 use App\Http\Controllers\Nutritionist\RecipeController;
 use App\Http\Controllers\Nutritionist\AnamnesisTemplateController;
+use App\Http\Controllers\Nutritionist\LabResultController;
 use App\Http\Controllers\Nutritionist\OnboardingController;
 use App\Http\Controllers\Nutritionist\SettingsController;
 use App\Http\Controllers\ProfileController;
@@ -74,6 +75,9 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
 
     // PDF export
     Route::get('plans/{plan}/pdf', [NutritionalPlanController::class, 'exportPdf'])->name('plans.pdf');
+
+    // Lab results (esami ematochimici)
+    Route::resource('lab-results', LabResultController::class);
 
     // Anamnesi templates
     Route::resource('anamnesis', AnamnesisTemplateController::class)

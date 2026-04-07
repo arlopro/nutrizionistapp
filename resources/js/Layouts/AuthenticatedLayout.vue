@@ -19,6 +19,7 @@ import {
     CreditCard,
     ShieldAlert,
     FileText,
+    FlaskConical,
 } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
@@ -44,6 +45,7 @@ const nutritionistNav = [
     { name: 'Piani', href: 'nutritionist.plans.index', icon: UtensilsCrossed },
     { name: 'Appuntamenti', href: 'nutritionist.appointments.index', icon: CalendarDays },
     { name: 'Monitoraggio', href: 'nutritionist.check-ins.index', icon: ClipboardCheck },
+    { name: 'Esami', href: 'nutritionist.lab-results.index', icon: FlaskConical },
     { name: 'Abbonamento', href: 'nutritionist.billing', icon: CreditCard },
     { name: 'Impostazioni', href: 'nutritionist.settings', icon: Settings },
 ];
