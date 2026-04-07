@@ -71,29 +71,43 @@ const duplicateDayTarget = ref<number>(1);
 // Modal: applica giorno a settimana
 const showApplyToWeek = ref(false);
 
-const filteredFoods = computed(() => {
-    if (!itemSearch.value) return props.foods.slice(0, 30);
+const FILTER_DISPLAY_LIMIT = 50;
+
+const filteredFoodsAll = computed(() => {
+    if (!itemSearch.value) return props.foods;
     const term = itemSearch.value.toLowerCase();
-    return props.foods.filter(f => f.name.toLowerCase().includes(term)).slice(0, 30);
+    return props.foods.filter(f => f.name.toLowerCase().includes(term));
 });
+const filteredFoods = computed(() => filteredFoodsAll.value.slice(0, FILTER_DISPLAY_LIMIT));
+const hasMoreFoods = computed(() => filteredFoodsAll.value.length > FILTER_DISPLAY_LIMIT);
+const totalFoodsCount = computed(() => filteredFoodsAll.value.length);
 
-const filteredRecipes = computed(() => {
-    if (!itemSearch.value) return props.recipes.slice(0, 30);
+const filteredRecipesAll = computed(() => {
+    if (!itemSearch.value) return props.recipes;
     const term = itemSearch.value.toLowerCase();
-    return props.recipes.filter(r => r.name.toLowerCase().includes(term)).slice(0, 30);
+    return props.recipes.filter(r => r.name.toLowerCase().includes(term));
 });
+const filteredRecipes = computed(() => filteredRecipesAll.value.slice(0, FILTER_DISPLAY_LIMIT));
+const hasMoreRecipes = computed(() => filteredRecipesAll.value.length > FILTER_DISPLAY_LIMIT);
+const totalRecipesCount = computed(() => filteredRecipesAll.value.length);
 
-const filteredAltFoods = computed(() => {
-    if (!altSearch.value) return props.foods.slice(0, 30);
+const filteredAltFoodsAll = computed(() => {
+    if (!altSearch.value) return props.foods;
     const term = altSearch.value.toLowerCase();
-    return props.foods.filter(f => f.name.toLowerCase().includes(term)).slice(0, 30);
+    return props.foods.filter(f => f.name.toLowerCase().includes(term));
 });
+const filteredAltFoods = computed(() => filteredAltFoodsAll.value.slice(0, FILTER_DISPLAY_LIMIT));
+const hasMoreAltFoods = computed(() => filteredAltFoodsAll.value.length > FILTER_DISPLAY_LIMIT);
+const totalAltFoodsCount = computed(() => filteredAltFoodsAll.value.length);
 
-const filteredAltRecipes = computed(() => {
-    if (!altSearch.value) return props.recipes.slice(0, 30);
+const filteredAltRecipesAll = computed(() => {
+    if (!altSearch.value) return props.recipes;
     const term = altSearch.value.toLowerCase();
-    return props.recipes.filter(r => r.name.toLowerCase().includes(term)).slice(0, 30);
+    return props.recipes.filter(r => r.name.toLowerCase().includes(term));
 });
+const filteredAltRecipes = computed(() => filteredAltRecipesAll.value.slice(0, FILTER_DISPLAY_LIMIT));
+const hasMoreAltRecipes = computed(() => filteredAltRecipesAll.value.length > FILTER_DISPLAY_LIMIT);
+const totalAltRecipesCount = computed(() => filteredAltRecipesAll.value.length);
 
 const dayMeals = computed(() => {
     return (props.plan.meals || []).filter((m: any) => m.day_of_week === activeDay.value);
@@ -695,6 +709,7 @@ function onQuantityChange(itemId: number, value: number) {
                             <Plus class="h-4 w-4 text-gray-300 flex-shrink-0" />
                         </button>
                         <div v-if="filteredFoods.length === 0" class="py-8 text-center text-sm text-gray-400">Nessun alimento trovato</div>
+                        <div v-if="hasMoreFoods" class="py-2 text-center text-xs text-gray-400">Mostrati {{ filteredFoods.length }} di {{ totalFoodsCount }} — affina la ricerca per trovare altri risultati</div>
                     </template>
                     <template v-else>
                         <button
@@ -711,6 +726,7 @@ function onQuantityChange(itemId: number, value: number) {
                             <Plus class="h-4 w-4 text-gray-300 flex-shrink-0" />
                         </button>
                         <div v-if="filteredRecipes.length === 0" class="py-8 text-center text-sm text-gray-400">Nessuna ricetta trovata</div>
+                        <div v-if="hasMoreRecipes" class="py-2 text-center text-xs text-gray-400">Mostrati {{ filteredRecipes.length }} di {{ totalRecipesCount }} — affina la ricerca per trovare altri risultati</div>
                     </template>
                 </div>
             </div>
@@ -751,6 +767,7 @@ function onQuantityChange(itemId: number, value: number) {
                             <GitBranch class="h-4 w-4 text-violet-300 flex-shrink-0" />
                         </button>
                         <div v-if="filteredAltFoods.length === 0" class="py-8 text-center text-sm text-gray-400">Nessun alimento trovato</div>
+                        <div v-if="hasMoreAltFoods" class="py-2 text-center text-xs text-gray-400">Mostrati {{ filteredAltFoods.length }} di {{ totalAltFoodsCount }} — affina la ricerca per trovare altri risultati</div>
                     </template>
                     <template v-else>
                         <button
@@ -767,6 +784,7 @@ function onQuantityChange(itemId: number, value: number) {
                             <GitBranch class="h-4 w-4 text-violet-300 flex-shrink-0" />
                         </button>
                         <div v-if="filteredAltRecipes.length === 0" class="py-8 text-center text-sm text-gray-400">Nessuna ricetta trovata</div>
+                        <div v-if="hasMoreAltRecipes" class="py-2 text-center text-xs text-gray-400">Mostrati {{ filteredAltRecipes.length }} di {{ totalAltRecipesCount }} — affina la ricerca per trovare altri risultati</div>
                     </template>
                 </div>
             </div>
