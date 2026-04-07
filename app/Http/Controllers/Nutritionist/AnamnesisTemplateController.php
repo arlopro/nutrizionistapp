@@ -56,7 +56,7 @@ class AnamnesisTemplateController extends Controller
 
     public function edit(AnamnesisTemplate $anamnesi)
     {
-        abort_unless($anamnesi->nutritionist_id === auth()->id(), 403);
+        $this->authorize('view', $anamnesi);
         return Inertia::render('Nutritionist/Anamnesis/Edit', [
             'template' => $anamnesi,
         ]);
@@ -64,7 +64,7 @@ class AnamnesisTemplateController extends Controller
 
     public function update(Request $request, AnamnesisTemplate $anamnesi)
     {
-        abort_unless($anamnesi->nutritionist_id === $request->user()->id, 403);
+        $this->authorize('update', $anamnesi);
 
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
@@ -92,7 +92,7 @@ class AnamnesisTemplateController extends Controller
 
     public function destroy(AnamnesisTemplate $anamnesi)
     {
-        abort_unless($anamnesi->nutritionist_id === auth()->id(), 403);
+        $this->authorize('delete', $anamnesi);
         $anamnesi->delete();
         return back()->with('success', 'Template eliminato.');
     }

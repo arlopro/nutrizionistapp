@@ -78,7 +78,7 @@ class AppointmentController extends Controller
             $clientName = $newUser->name;
         } elseif ($clientId) {
             $client = \App\Models\ClientProfile::with('user')->findOrFail($clientId);
-            abort_unless($client->nutritionist_id === $request->user()->id, 403);
+            $this->authorize('view', $client);
             $clientName = $client->user->name;
         }
 
@@ -103,7 +103,7 @@ class AppointmentController extends Controller
 
     public function update(Request $request, Appointment $appointment)
     {
-        abort_unless($appointment->nutritionist_id === $request->user()->id, 403);
+        $this->authorize('update', $appointment);
 
         $validated = $request->validate([
             'client_id'   => 'nullable|exists:client_profiles,id',
@@ -118,7 +118,7 @@ class AppointmentController extends Controller
 
         if ($validated['client_id']) {
             $client = \App\Models\ClientProfile::with('user')->findOrFail($validated['client_id']);
-            abort_unless($client->nutritionist_id === $request->user()->id, 403);
+            $this->authorize('view', $client);
             $clientName = $client->user->name;
         } else {
             $clientName = null;
@@ -134,7 +134,7 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment)
     {
-        abort_unless($appointment->nutritionist_id === auth()->id(), 403);
+        $this->authorize('delete', $appointment);
         $appointment->delete();
 
         return back()->with('success', 'Appuntamento eliminato.');

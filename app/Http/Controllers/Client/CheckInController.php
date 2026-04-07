@@ -95,8 +95,7 @@ class CheckInController extends Controller
 
     public function show(Request $request, CheckIn $checkIn)
     {
-        $clientProfile = $request->user()->clientProfile;
-        abort_unless($clientProfile && $checkIn->client_id === $clientProfile->id, 403);
+        $this->authorize('view', $checkIn);
 
         $checkIn->load(['measurements', 'photos']);
 

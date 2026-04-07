@@ -101,9 +101,6 @@ class FoodController extends Controller
 
     private function authorizeFood(Food $food): void
     {
-        abort_unless(
-            $food->nutritionist_id !== null && $food->nutritionist_id === auth()->id(),
-            403
-        );
+        $this->authorize('update', $food);
     }
 }

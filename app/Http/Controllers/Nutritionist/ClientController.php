@@ -203,6 +203,6 @@ class ClientController extends Controller
 
     private function authorizeClient(ClientProfile $client): void
     {
-        abort_unless($client->nutritionist_id === auth()->id(), 403);
+        $this->authorize('view', $client);
     }
 }

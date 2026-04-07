@@ -13,11 +13,11 @@ class FoodPolicy
      */
     public function update(User $user, Food $food): bool
     {
-        return $food->nutritionist_id === null || $food->nutritionist_id === $user->id;
+        return $food->nutritionist_id !== null && $food->nutritionist_id === $user->id;
     }
 
     public function delete(User $user, Food $food): bool
     {
-        return $food->nutritionist_id === null || $food->nutritionist_id === $user->id;
+        return $food->nutritionist_id !== null && $food->nutritionist_id === $user->id;
     }
 }

@@ -178,6 +178,6 @@ class RecipeController extends Controller
 
     private function authorizeRecipe(Recipe $recipe): void
     {
-        abort_unless($recipe->nutritionist_id === auth()->id(), 403);
+        $this->authorize('view', $recipe);
     }
 }

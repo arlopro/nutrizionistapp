@@ -37,7 +37,7 @@ class CheckInController extends Controller
     public function show(Request $request, CheckIn $checkIn)
     {
         $checkIn->load(['client.user', 'measurements', 'photos']);
-        abort_unless($checkIn->client->nutritionist_id === $request->user()->id, 403);
+        $this->authorize('view', $checkIn);
 
         $weightHistory = CheckIn::where('client_id', $checkIn->client_id)
             ->whereNotNull('weight_kg')
@@ -54,7 +54,7 @@ class CheckInController extends Controller
     public function addNotes(Request $request, CheckIn $checkIn)
     {
         $checkIn->load('client');
-        abort_unless($checkIn->client->nutritionist_id === $request->user()->id, 403);
+        $this->authorize('update', $checkIn);
 
         $validated = $request->validate([
             'nutritionist_notes' => 'required|string',

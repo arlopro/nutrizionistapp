@@ -216,7 +216,7 @@ class PlanMealController extends Controller
 
     private function authorizePlan(NutritionalPlan $plan): void
     {
-        abort_unless($plan->nutritionist_id === auth()->id(), 403);
+        $this->authorize('view', $plan);
     }
 
     private function authorizeItem(NutritionalPlan $plan, PlanMealItem $item): void

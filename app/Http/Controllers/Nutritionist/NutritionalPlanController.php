@@ -77,7 +77,7 @@ class NutritionalPlanController extends Controller
         ]);
 
         $client = ClientProfile::findOrFail($validated['client_id']);
-        abort_unless($client->nutritionist_id === $request->user()->id, 403);
+        $this->authorize('view', $client);
 
         $plan = NutritionalPlan::create([
             ...collect($validated)->except('template_id')->toArray(),
@@ -344,6 +344,6 @@ class NutritionalPlanController extends Controller
 
     private function authorizePlan(NutritionalPlan $plan): void
     {
-        abort_unless($plan->nutritionist_id === auth()->id(), 403);
+        $this->authorize('view', $plan);
     }
 }
