@@ -44,8 +44,9 @@ class TdeeCalculator
     public static function goalCalories(float $tdee, ?ClientGoal $goal): float
     {
         return round(match ($goal) {
-            ClientGoal::WeightLoss => $tdee * 0.80,
+            ClientGoal::WeightLoss, ClientGoal::WeightClassTarget => $tdee * 0.80,
             ClientGoal::WeightGain, ClientGoal::MuscleGain => $tdee * 1.15,
+            ClientGoal::SportPerformance, ClientGoal::EnduranceImprovement => $tdee * 1.10,
             default => $tdee,
         }, 0);
     }
