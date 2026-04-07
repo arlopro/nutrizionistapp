@@ -17,7 +17,7 @@ class ClientProfile extends Model
 
     protected $guarded = ['id'];
 
-    protected $appends = ['bmi', 'bmi_category'];
+    protected $appends = ['bmi', 'bmi_category', 'current_weight'];
 
     protected function casts(): array
     {
@@ -79,11 +79,27 @@ class ClientProfile extends Model
 
     public function getBmiAttribute(): ?float
     {
-        if (!$this->height_cm || !$this->initial_weight_kg) {
+        $weight = $this->latestWeight();
+        if (!$this->height_cm || !$weight) {
             return null;
         }
         $heightM = $this->height_cm / 100;
-        return round($this->initial_weight_kg / ($heightM * $heightM), 1);
+        return round($weight / ($heightM * $heightM), 1);
+    }
+
+    public function latestWeight(): ?float
+    {
+        $lastCheckInWeight = $this->checkIns()
+            ->whereNotNull('weight_kg')
+            ->latest('date')
+            ->value('weight_kg');
+
+        return $lastCheckInWeight ?? $this->initial_weight_kg;
+    }
+
+    public function getCurrentWeightAttribute(): ?float
+    {
+        return $this->latestWeight();
     }
 
     public function getBmiCategoryAttribute(): ?string

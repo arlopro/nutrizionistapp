@@ -166,8 +166,9 @@ function formatDateTime(d: string) {
                         </div>
                         <div class="rounded-xl bg-gray-50 p-3 text-center">
                             <Weight class="mx-auto h-5 w-5 text-gray-400 mb-1" />
-                            <p class="text-lg font-bold text-gray-900">{{ client.initial_weight_kg || '-' }}</p>
-                            <p class="text-xs text-gray-500">kg peso iniziale</p>
+                            <p class="text-lg font-bold text-gray-900">{{ client.current_weight || client.initial_weight_kg || '-' }}</p>
+                            <p class="text-xs text-gray-500">kg peso attuale</p>
+                            <p v-if="client.current_weight && client.initial_weight_kg && client.current_weight !== parseFloat(client.initial_weight_kg)" class="text-xs text-gray-400 mt-0.5">iniziale: {{ client.initial_weight_kg }} kg</p>
                         </div>
                         <div v-if="client.bmi" class="rounded-xl bg-indigo-50 p-3 text-center">
                             <Activity class="mx-auto h-5 w-5 text-indigo-400 mb-1" />
