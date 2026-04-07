@@ -44,9 +44,19 @@ class CheckInController extends Controller
             ->orderBy('date', 'asc')
             ->get(['id', 'date', 'weight_kg']);
 
+        $bodyCompHistory = CheckIn::where('client_id', $checkIn->client_id)
+            ->where(function ($q) {
+                $q->whereNotNull('body_fat_percentage')
+                  ->orWhereNotNull('lean_mass_kg')
+                  ->orWhereNotNull('body_water_percentage');
+            })
+            ->orderBy('date', 'asc')
+            ->get(['id', 'date', 'body_fat_percentage', 'lean_mass_kg', 'body_water_percentage']);
+
         return Inertia::render('Nutritionist/CheckIns/Show', [
             'checkIn' => $checkIn,
             'weightHistory' => $weightHistory,
+            'bodyCompHistory' => $bodyCompHistory,
             'measurementTypes' => collect(MeasurementType::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()]),
         ]);
     }

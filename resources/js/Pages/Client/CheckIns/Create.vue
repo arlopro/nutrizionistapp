@@ -16,6 +16,13 @@ const props = defineProps<{
 const form = useForm({
     date: new Date().toISOString().slice(0, 10),
     weight_kg: '',
+    body_fat_percentage: '',
+    lean_mass_kg: '',
+    body_water_percentage: '',
+    skinfold_triceps: '',
+    skinfold_biceps: '',
+    skinfold_subscapular: '',
+    skinfold_suprailiac: '',
     notes: '',
     mood: null as number | null,
     energy_level: null as number | null,
@@ -24,6 +31,8 @@ const form = useForm({
     measurements: [] as { type: string; value: string }[],
     photos: [] as { file: File | null; type: string }[],
 });
+
+const showBodyComp = ref(false);
 
 function addMeasurement() {
     form.measurements.push({ type: '', value: '' });
@@ -98,6 +107,58 @@ function submit() {
                     <div>
                         <InputLabel for="water" value="Acqua giornaliera (litri)" />
                         <TextInput id="water" v-model="form.water_liters" type="number" step="0.1" min="0" max="10" class="mt-1 block w-full" placeholder="es. 2.0" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Composizione corporea -->
+            <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <button type="button" @click="showBodyComp = !showBodyComp" class="flex items-center justify-between w-full">
+                    <h2 class="text-base font-semibold text-gray-900">Composizione corporea</h2>
+                    <span class="text-sm text-primary-600">{{ showBodyComp ? 'Nascondi' : 'Mostra campi' }}</span>
+                </button>
+                <div v-show="showBodyComp" class="mt-4 space-y-4">
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        <div>
+                            <InputLabel for="body_fat" value="Massa grassa (%)" />
+                            <TextInput id="body_fat" v-model="form.body_fat_percentage" type="number" step="0.1" min="1" max="70" class="mt-1 block w-full" placeholder="es. 22.5" />
+                            <InputError :message="form.errors.body_fat_percentage" class="mt-1" />
+                        </div>
+                        <div>
+                            <InputLabel for="lean_mass" value="Massa magra (kg)" />
+                            <TextInput id="lean_mass" v-model="form.lean_mass_kg" type="number" step="0.1" min="10" max="200" class="mt-1 block w-full" placeholder="es. 55.0" />
+                            <InputError :message="form.errors.lean_mass_kg" class="mt-1" />
+                        </div>
+                        <div>
+                            <InputLabel for="body_water" value="Acqua corporea (%)" />
+                            <TextInput id="body_water" v-model="form.body_water_percentage" type="number" step="0.1" min="20" max="80" class="mt-1 block w-full" placeholder="es. 55.0" />
+                            <InputError :message="form.errors.body_water_percentage" class="mt-1" />
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-700 mb-2">Plicometria (mm)</p>
+                        <div class="grid gap-4 sm:grid-cols-4">
+                            <div>
+                                <InputLabel for="sf_triceps" value="Tricipitale" />
+                                <TextInput id="sf_triceps" v-model="form.skinfold_triceps" type="number" step="0.1" min="1" max="80" class="mt-1 block w-full" placeholder="mm" />
+                                <InputError :message="form.errors.skinfold_triceps" class="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel for="sf_biceps" value="Bicipitale" />
+                                <TextInput id="sf_biceps" v-model="form.skinfold_biceps" type="number" step="0.1" min="1" max="80" class="mt-1 block w-full" placeholder="mm" />
+                                <InputError :message="form.errors.skinfold_biceps" class="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel for="sf_subscapular" value="Sottoscapolare" />
+                                <TextInput id="sf_subscapular" v-model="form.skinfold_subscapular" type="number" step="0.1" min="1" max="80" class="mt-1 block w-full" placeholder="mm" />
+                                <InputError :message="form.errors.skinfold_subscapular" class="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel for="sf_suprailiac" value="Sovrailiaca" />
+                                <TextInput id="sf_suprailiac" v-model="form.skinfold_suprailiac" type="number" step="0.1" min="1" max="80" class="mt-1 block w-full" placeholder="mm" />
+                                <InputError :message="form.errors.skinfold_suprailiac" class="mt-1" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -18,6 +18,13 @@ class CheckIn extends Model
         return [
             'date' => 'date',
             'weight_kg' => 'decimal:1',
+            'body_fat_percentage' => 'decimal:1',
+            'lean_mass_kg' => 'decimal:1',
+            'body_water_percentage' => 'decimal:1',
+            'skinfold_triceps' => 'decimal:1',
+            'skinfold_biceps' => 'decimal:1',
+            'skinfold_subscapular' => 'decimal:1',
+            'skinfold_suprailiac' => 'decimal:1',
             'water_liters' => 'decimal:1',
         ];
     }

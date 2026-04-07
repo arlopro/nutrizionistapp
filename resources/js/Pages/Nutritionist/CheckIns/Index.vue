@@ -62,6 +62,7 @@ function formatDate(d: string) {
                         </div>
                         <div class="flex items-center gap-4 text-sm text-gray-500">
                             <span v-if="checkIn.weight_kg" class="flex items-center gap-1"><Scale class="h-3.5 w-3.5" /> {{ checkIn.weight_kg }} kg</span>
+                            <span v-if="checkIn.body_fat_percentage">Grassa: {{ checkIn.body_fat_percentage }}%</span>
                             <span v-if="checkIn.mood">Umore: {{ checkIn.mood }}/5</span>
                             <span v-if="checkIn.measurements?.length" class="text-gray-400">{{ checkIn.measurements.length }} misure</span>
                         </div>

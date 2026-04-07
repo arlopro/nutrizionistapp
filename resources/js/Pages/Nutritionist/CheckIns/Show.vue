@@ -8,13 +8,14 @@ import {
     Chart as ChartJS, CategoryScale, LinearScale, PointElement,
     LineElement, Tooltip, Filler,
 } from 'chart.js';
-import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, User, TrendingDown, TrendingUp, Minus } from 'lucide-vue-next';
+import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, User, TrendingDown, TrendingUp, Minus, Activity, Percent } from 'lucide-vue-next';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
 const props = defineProps<{
     checkIn: any;
     weightHistory: { id: number; date: string; weight_kg: string | number }[];
+    bodyCompHistory: { id: number; date: string; body_fat_percentage: string | number | null; lean_mass_kg: string | number | null; body_water_percentage: string | number | null }[];
     measurementTypes: { value: string; label: string }[];
 }>();
 
@@ -88,6 +89,60 @@ const weightChange = computed(() => {
     if (!prevCheckIn.value || !props.checkIn.weight_kg) return null;
     return Math.round((Number(props.checkIn.weight_kg) - Number(prevCheckIn.value.weight_kg)) * 10) / 10;
 });
+
+const bodyCompChartData = computed(() => {
+    if (!props.bodyCompHistory || props.bodyCompHistory.length < 2) return null;
+    const currentIdx = props.bodyCompHistory.findIndex(b => b.id === props.checkIn.id);
+    const labels = props.bodyCompHistory.map(b =>
+        new Date(b.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+    );
+    const datasets = [];
+    if (props.bodyCompHistory.some(b => b.body_fat_percentage)) {
+        datasets.push({
+            label: 'Massa grassa %',
+            data: props.bodyCompHistory.map(b => b.body_fat_percentage ? Number(b.body_fat_percentage) : null),
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244,63,94,0.08)',
+            borderWidth: 2,
+            pointRadius: props.bodyCompHistory.map((_, i) => i === currentIdx ? 8 : 4),
+            pointBackgroundColor: props.bodyCompHistory.map((_, i) => i === currentIdx ? '#7c3aed' : '#f43f5e'),
+            tension: 0.3,
+            fill: false,
+            spanGaps: true,
+        });
+    }
+    if (props.bodyCompHistory.some(b => b.lean_mass_kg)) {
+        datasets.push({
+            label: 'Massa magra kg',
+            data: props.bodyCompHistory.map(b => b.lean_mass_kg ? Number(b.lean_mass_kg) : null),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.08)',
+            borderWidth: 2,
+            pointRadius: props.bodyCompHistory.map((_, i) => i === currentIdx ? 8 : 4),
+            pointBackgroundColor: props.bodyCompHistory.map((_, i) => i === currentIdx ? '#7c3aed' : '#10b981'),
+            tension: 0.3,
+            fill: false,
+            spanGaps: true,
+        });
+    }
+    if (datasets.length === 0) return null;
+    return { labels, datasets };
+});
+
+const bodyCompChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: true, position: 'top' as const },
+        tooltip: {
+            callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${ctx.parsed.y}` },
+        },
+    },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } },
+    },
+};
 </script>
 
 <template>
@@ -155,6 +210,63 @@ const weightChange = computed(() => {
                 </div>
                 <div class="relative h-48">
                     <Line :data="chartData" :options="chartOptions" />
+                </div>
+            </div>
+
+            <!-- Composizione corporea -->
+            <div v-if="checkIn.body_fat_percentage || checkIn.lean_mass_kg || checkIn.body_water_percentage" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-3">Composizione corporea</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div v-if="checkIn.body_fat_percentage" class="text-center">
+                        <Percent class="h-5 w-5 mx-auto text-rose-400 mb-1" />
+                        <span class="text-xl font-bold text-gray-900">{{ checkIn.body_fat_percentage }}%</span>
+                        <span class="text-xs text-gray-500 block">massa grassa</span>
+                    </div>
+                    <div v-if="checkIn.lean_mass_kg" class="text-center">
+                        <Activity class="h-5 w-5 mx-auto text-emerald-400 mb-1" />
+                        <span class="text-xl font-bold text-gray-900">{{ checkIn.lean_mass_kg }}</span>
+                        <span class="text-xs text-gray-500 block">kg massa magra</span>
+                    </div>
+                    <div v-if="checkIn.body_water_percentage" class="text-center">
+                        <Droplets class="h-5 w-5 mx-auto text-cyan-400 mb-1" />
+                        <span class="text-xl font-bold text-gray-900">{{ checkIn.body_water_percentage }}%</span>
+                        <span class="text-xs text-gray-500 block">acqua corporea</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plicometria -->
+            <div v-if="checkIn.skinfold_triceps || checkIn.skinfold_biceps || checkIn.skinfold_subscapular || checkIn.skinfold_suprailiac" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-3">Plicometria</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div v-if="checkIn.skinfold_triceps" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Tricipitale</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_triceps }} mm</span>
+                    </div>
+                    <div v-if="checkIn.skinfold_biceps" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Bicipitale</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_biceps }} mm</span>
+                    </div>
+                    <div v-if="checkIn.skinfold_subscapular" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Sottoscapolare</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_subscapular }} mm</span>
+                    </div>
+                    <div v-if="checkIn.skinfold_suprailiac" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Sovrailiaca</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_suprailiac }} mm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grafico composizione corporea -->
+            <div v-if="bodyCompChartData" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <Activity class="h-5 w-5 text-gray-400" />
+                    <h2 class="text-base font-semibold text-gray-900">Progressione composizione corporea</h2>
+                    <span class="text-xs text-violet-600 bg-violet-50 rounded-full px-2 py-0.5 ml-auto">punto viola = questo monitoraggio</span>
+                </div>
+                <div class="relative h-48">
+                    <Line :data="bodyCompChartData" :options="bodyCompChartOptions" />
                 </div>
             </div>
 

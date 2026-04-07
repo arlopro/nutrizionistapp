@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon } from 'lucide-vue-next';
+import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, Activity, Percent } from 'lucide-vue-next';
 
 const props = defineProps<{
     checkIn: any;
@@ -61,6 +61,51 @@ function ratingDots(value: number) {
                         <Moon class="h-5 w-5 mx-auto text-indigo-400 mb-1" />
                         <span class="text-xl font-bold text-gray-900">{{ checkIn.sleep_quality }}/5</span>
                         <span class="text-xs text-gray-500 block">sonno</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Composizione corporea -->
+            <div v-if="checkIn.body_fat_percentage || checkIn.lean_mass_kg || checkIn.body_water_percentage" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-3">Composizione corporea</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div v-if="checkIn.body_fat_percentage" class="text-center">
+                        <Percent class="h-5 w-5 mx-auto text-rose-400 mb-1" />
+                        <span class="text-xl font-bold text-gray-900">{{ checkIn.body_fat_percentage }}%</span>
+                        <span class="text-xs text-gray-500 block">massa grassa</span>
+                    </div>
+                    <div v-if="checkIn.lean_mass_kg" class="text-center">
+                        <Activity class="h-5 w-5 mx-auto text-emerald-400 mb-1" />
+                        <span class="text-xl font-bold text-gray-900">{{ checkIn.lean_mass_kg }}</span>
+                        <span class="text-xs text-gray-500 block">kg massa magra</span>
+                    </div>
+                    <div v-if="checkIn.body_water_percentage" class="text-center">
+                        <Droplets class="h-5 w-5 mx-auto text-cyan-400 mb-1" />
+                        <span class="text-xl font-bold text-gray-900">{{ checkIn.body_water_percentage }}%</span>
+                        <span class="text-xs text-gray-500 block">acqua corporea</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plicometria -->
+            <div v-if="checkIn.skinfold_triceps || checkIn.skinfold_biceps || checkIn.skinfold_subscapular || checkIn.skinfold_suprailiac" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-3">Plicometria</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div v-if="checkIn.skinfold_triceps" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Tricipitale</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_triceps }} mm</span>
+                    </div>
+                    <div v-if="checkIn.skinfold_biceps" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Bicipitale</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_biceps }} mm</span>
+                    </div>
+                    <div v-if="checkIn.skinfold_subscapular" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Sottoscapolare</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_subscapular }} mm</span>
+                    </div>
+                    <div v-if="checkIn.skinfold_suprailiac" class="rounded-lg bg-gray-50 px-4 py-2.5 text-center">
+                        <span class="text-xs text-gray-500 block">Sovrailiaca</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ checkIn.skinfold_suprailiac }} mm</span>
                     </div>
                 </div>
             </div>

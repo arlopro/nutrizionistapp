@@ -68,6 +68,9 @@ function moodIcon(mood: number) {
                             <span v-if="checkIn.mood">
                                 Umore: {{ moodIcon(checkIn.mood) }}
                             </span>
+                            <span v-if="checkIn.body_fat_percentage">
+                                Grassa: {{ checkIn.body_fat_percentage }}%
+                            </span>
                             <span v-if="checkIn.water_liters">
                                 Acqua: {{ checkIn.water_liters }}L
                             </span>

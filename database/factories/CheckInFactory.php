@@ -29,6 +29,13 @@ class CheckInFactory extends Factory
             'client_id'    => null,
             'date'         => fake()->dateTimeBetween('-5 months', 'now')->format('Y-m-d'),
             'weight_kg'    => null, // set in seeder based on progression
+            'body_fat_percentage' => fake()->boolean(40) ? fake()->randomFloat(1, 12.0, 35.0) : null,
+            'lean_mass_kg' => fake()->boolean(40) ? fake()->randomFloat(1, 35.0, 75.0) : null,
+            'body_water_percentage' => fake()->boolean(30) ? fake()->randomFloat(1, 45.0, 65.0) : null,
+            'skinfold_triceps' => fake()->boolean(25) ? fake()->randomFloat(1, 5.0, 35.0) : null,
+            'skinfold_biceps' => fake()->boolean(25) ? fake()->randomFloat(1, 3.0, 20.0) : null,
+            'skinfold_subscapular' => fake()->boolean(25) ? fake()->randomFloat(1, 5.0, 30.0) : null,
+            'skinfold_suprailiac' => fake()->boolean(25) ? fake()->randomFloat(1, 5.0, 35.0) : null,
             'mood'         => fake()->numberBetween(2, 5),
             'energy_level' => fake()->numberBetween(2, 5),
             'sleep_quality' => fake()->numberBetween(2, 5),
