@@ -14,10 +14,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $clientProfile = $user->clientProfile;
 
-        $activePlan = $clientProfile?->nutritionalPlans()
-            ->where('status', 'active')
-            ->latest()
-            ->first();
+        $activePlan = $clientProfile?->activePlan();
 
         $lastCheckIn = $clientProfile?->checkIns()
             ->with('measurements')

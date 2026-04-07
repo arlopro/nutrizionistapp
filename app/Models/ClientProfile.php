@@ -69,7 +69,15 @@ class ClientProfile extends Model
 
     public function activePlan()
     {
-        return $this->nutritionalPlans()->where('status', 'active')->latest()->first();
+        return $this->nutritionalPlans()
+            ->where('status', 'active')
+            ->where('start_date', '<=', now()->toDateString())
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now()->toDateString());
+            })
+            ->orderByDesc('start_date')
+            ->first();
     }
 
     public function mealCompletions(): HasMany
