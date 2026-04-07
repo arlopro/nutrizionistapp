@@ -85,6 +85,7 @@ class PlanMealController extends Controller
     public function updateItem(Request $request, NutritionalPlan $plan, PlanMealItem $item)
     {
         $this->authorizePlan($plan);
+        $this->authorizeItem($plan, $item);
 
         $validated = $request->validate([
             'quantity_grams' => 'nullable|numeric|min:0.1',
@@ -99,6 +100,7 @@ class PlanMealController extends Controller
     public function destroyItem(NutritionalPlan $plan, PlanMealItem $item)
     {
         $this->authorizePlan($plan);
+        $this->authorizeItem($plan, $item);
 
         $item->delete();
 
@@ -108,6 +110,7 @@ class PlanMealController extends Controller
     public function storeAlternative(Request $request, NutritionalPlan $plan, PlanMealItem $item)
     {
         $this->authorizePlan($plan);
+        $this->authorizeItem($plan, $item);
 
         $validated = $request->validate([
             'food_id'        => 'nullable|exists:foods,id',
@@ -214,5 +217,10 @@ class PlanMealController extends Controller
     private function authorizePlan(NutritionalPlan $plan): void
     {
         abort_unless($plan->nutritionist_id === auth()->id(), 403);
+    }
+
+    private function authorizeItem(NutritionalPlan $plan, PlanMealItem $item): void
+    {
+        abort_unless($item->meal->nutritional_plan_id === $plan->id, 403);
     }
 }

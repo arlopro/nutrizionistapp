@@ -287,7 +287,7 @@ class NutritionalPlanController extends Controller
     {
         $this->authorizePlan($plan);
 
-        $plan->load(['client.user', 'meals' => fn ($q) => $q->orderBy('day_of_week')->orderBy('sort_order'), 'meals.items.food', 'meals.items.recipe']);
+        $plan->load(['client.user', 'meals' => fn ($q) => $q->orderBy('day_of_week')->orderBy('sort_order'), 'meals.items.food', 'meals.items.recipe.ingredients.food']);
 
         $nutritionist = auth()->user();
         $profile = $nutritionist->nutritionistProfile;

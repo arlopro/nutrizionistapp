@@ -362,13 +362,13 @@
                 @foreach($meals->sortBy('sort_order') as $meal)
                 <div class="meal-block">
                     <div class="meal-header">
-                        <div class="meal-name">{{ $meal->meal_type }}</div>
+                        <div class="meal-name">{{ $meal->meal_type instanceof \BackedEnum ? $meal->meal_type->label() : $meal->meal_type }}</div>
                         @if(!$meal->free_text && $meal->items->count())
                         @php
-                            $mCal = $meal->items->sum(fn($i) => $i->food ? round($i->food->calories_per_100g * $i->quantity_grams / 100, 0) : 0);
-                            $mProt = $meal->items->sum(fn($i) => $i->food ? round($i->food->protein_per_100g * $i->quantity_grams / 100, 1) : 0);
-                            $mCarb = $meal->items->sum(fn($i) => $i->food ? round($i->food->carbs_per_100g * $i->quantity_grams / 100, 1) : 0);
-                            $mFat = $meal->items->sum(fn($i) => $i->food ? round($i->food->fat_per_100g * $i->quantity_grams / 100, 1) : 0);
+                            $mCal = $meal->items->sum(fn($i) => $i->food && $i->quantity_grams ? $i->food->calories_per_100g * $i->quantity_grams / 100 : ($i->recipe ? $i->recipe->total_calories : 0));
+                            $mProt = $meal->items->sum(fn($i) => $i->food && $i->quantity_grams ? $i->food->protein_per_100g * $i->quantity_grams / 100 : ($i->recipe ? $i->recipe->total_protein : 0));
+                            $mCarb = $meal->items->sum(fn($i) => $i->food && $i->quantity_grams ? $i->food->carbs_per_100g * $i->quantity_grams / 100 : ($i->recipe ? $i->recipe->total_carbs : 0));
+                            $mFat = $meal->items->sum(fn($i) => $i->food && $i->quantity_grams ? $i->food->fat_per_100g * $i->quantity_grams / 100 : ($i->recipe ? $i->recipe->total_fat : 0));
                         @endphp
                         <div class="meal-macros">
                             <span class="kcal">{{ $mCal }} kcal</span>
@@ -389,14 +389,23 @@
                                     <span class="food-name">
                                         {{ $item->food?->name ?? $item->recipe?->name ?? 'Alimento' }}
                                     </span>
-                                    <span class="food-qty">{{ $item->quantity_grams }}g</span>
+                                    @if($item->food && $item->quantity_grams)
+                                        <span class="food-qty">{{ $item->quantity_grams }}g</span>
+                                    @endif
                                 </div>
-                                @if($item->food)
+                                @if($item->food && $item->quantity_grams)
                                 <div class="food-macros">
                                     {{ round($item->food->calories_per_100g * $item->quantity_grams / 100) }} kcal
                                     &nbsp;|&nbsp;P {{ round($item->food->protein_per_100g * $item->quantity_grams / 100, 1) }}g
                                     &nbsp;C {{ round($item->food->carbs_per_100g * $item->quantity_grams / 100, 1) }}g
                                     &nbsp;G {{ round($item->food->fat_per_100g * $item->quantity_grams / 100, 1) }}g
+                                </div>
+                                @elseif($item->recipe)
+                                <div class="food-macros">
+                                    {{ round($item->recipe->total_calories) }} kcal
+                                    &nbsp;|&nbsp;P {{ round($item->recipe->total_protein, 1) }}g
+                                    &nbsp;C {{ round($item->recipe->total_carbs, 1) }}g
+                                    &nbsp;G {{ round($item->recipe->total_fat, 1) }}g
                                 </div>
                                 @endif
                             </div>
