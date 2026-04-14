@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useForm, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Camera, Trash2, Save, Globe, Instagram, MapPin, Phone, User, Briefcase, Plus, X } from 'lucide-vue-next';
+import { Camera, Trash2, Save, Globe, Instagram, MapPin, Phone, User, Briefcase, Plus, X, Bell, Mail, CalendarCheck, ClipboardList } from 'lucide-vue-next';
 
 const props = defineProps<{
     profile: {
@@ -18,6 +18,13 @@ const props = defineProps<{
     logoUrl: string | null;
     userPhone: string | null;
     locations: string[];
+    notificationSettings: {
+        appointment_reminder: boolean;
+        appointment_reminder_hours: number;
+        checkin_reminder: boolean;
+        checkin_reminder_day: string;
+        plan_delivered: boolean;
+    };
 }>();
 
 const page = usePage();
@@ -107,6 +114,21 @@ function saveLocations() {
     }, {
         preserveScroll: true,
         onFinish: () => { savingLocations.value = false; },
+    });
+}
+
+// ─── Notification settings ──────────────────────────────────────────────────
+const notifForm = useForm({
+    appointment_reminder:       props.notificationSettings.appointment_reminder,
+    appointment_reminder_hours: props.notificationSettings.appointment_reminder_hours,
+    checkin_reminder:           props.notificationSettings.checkin_reminder,
+    checkin_reminder_day:       props.notificationSettings.checkin_reminder_day,
+    plan_delivered:             props.notificationSettings.plan_delivered,
+});
+
+function saveNotifications() {
+    notifForm.patch(route('nutritionist.settings.notifications.update'), {
+        preserveScroll: true,
     });
 }
 </script>
@@ -394,6 +416,96 @@ function saveLocations() {
                     >
                         <Save class="h-4 w-4" />
                         {{ savingLocations ? 'Salvataggio...' : 'Salva luoghi' }}
+                    </button>
+                </div>
+            </div>
+            <!-- Notifiche email -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="flex items-center gap-2 mb-1">
+                    <Bell class="h-5 w-5 text-primary-500" />
+                    <h2 class="text-base font-semibold text-gray-900">Notifiche email ai pazienti</h2>
+                </div>
+                <p class="text-sm text-gray-400 mb-5">Configura le email automatiche inviate ai tuoi pazienti.</p>
+
+                <div class="space-y-5">
+                    <!-- Appointment reminder -->
+                    <div class="flex items-start gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer mt-0.5">
+                            <input type="checkbox" v-model="notifForm.appointment_reminder" class="sr-only peer" />
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
+                        </label>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <CalendarCheck class="h-4 w-4 text-gray-400" />
+                                <span class="text-sm font-medium text-gray-800">Promemoria appuntamento</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-0.5">Invia un'email al paziente prima dell'appuntamento.</p>
+                            <div v-if="notifForm.appointment_reminder" class="mt-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Anticipo promemoria</label>
+                                <select v-model="notifForm.appointment_reminder_hours" class="rounded-lg border-gray-300 text-sm py-1.5 focus:border-primary-500 focus:ring-primary-500">
+                                    <option :value="1">1 ora prima</option>
+                                    <option :value="2">2 ore prima</option>
+                                    <option :value="4">4 ore prima</option>
+                                    <option :value="12">12 ore prima</option>
+                                    <option :value="24">24 ore prima (1 giorno)</option>
+                                    <option :value="48">48 ore prima (2 giorni)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Check-in reminder -->
+                    <div class="flex items-start gap-3 border-t border-gray-100 pt-5">
+                        <label class="relative inline-flex items-center cursor-pointer mt-0.5">
+                            <input type="checkbox" v-model="notifForm.checkin_reminder" class="sr-only peer" />
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
+                        </label>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <ClipboardList class="h-4 w-4 text-gray-400" />
+                                <span class="text-sm font-medium text-gray-800">Promemoria check-in settimanale</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-0.5">Ricorda ai pazienti attivi di compilare il check-in settimanale.</p>
+                            <div v-if="notifForm.checkin_reminder" class="mt-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Giorno di invio</label>
+                                <select v-model="notifForm.checkin_reminder_day" class="rounded-lg border-gray-300 text-sm py-1.5 focus:border-primary-500 focus:ring-primary-500">
+                                    <option value="monday">Lunedì</option>
+                                    <option value="tuesday">Martedì</option>
+                                    <option value="wednesday">Mercoledì</option>
+                                    <option value="thursday">Giovedì</option>
+                                    <option value="friday">Venerdì</option>
+                                    <option value="saturday">Sabato</option>
+                                    <option value="sunday">Domenica</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plan delivered -->
+                    <div class="flex items-start gap-3 border-t border-gray-100 pt-5">
+                        <label class="relative inline-flex items-center cursor-pointer mt-0.5">
+                            <input type="checkbox" v-model="notifForm.plan_delivered" class="sr-only peer" />
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
+                        </label>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <Mail class="h-4 w-4 text-gray-400" />
+                                <span class="text-sm font-medium text-gray-800">Conferma ricezione piano</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-0.5">Invia un'email al paziente quando un nuovo piano nutrizionale viene creato o attivato.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-5 pt-4 border-t border-gray-100">
+                    <button
+                        type="button"
+                        @click="saveNotifications"
+                        :disabled="notifForm.processing"
+                        class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50 transition"
+                    >
+                        <Save class="h-4 w-4" />
+                        {{ notifForm.processing ? 'Salvataggio...' : 'Salva notifiche' }}
                     </button>
                 </div>
             </div>

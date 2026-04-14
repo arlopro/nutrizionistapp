@@ -422,6 +422,42 @@
         </div>
         @endforeach
 
+        @if($plan->supplements->count())
+        <div style="margin-top: 24px; page-break-inside: avoid;">
+            <div style="background: #0d9488; color: white; padding: 7px 14px; border-radius: 7px 7px 0 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                Integratori / Supplementi
+            </div>
+            <div style="border: 1px solid #ccfbf1; border-top: none; border-radius: 0 0 7px 7px; overflow: hidden;">
+                @foreach($plan->supplements->sortBy('sort_order') as $supplement)
+                <div style="padding: 8px 14px; border-bottom: 1px solid #f0fdfa;{{ $loop->last ? ' border-bottom: none;' : '' }}">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <div>
+                            <span style="font-size: 10px; font-weight: 600; color: #374151;">{{ $supplement->name }}</span>
+                            @if($supplement->dosage)
+                                <span style="font-size: 9px; color: #0d9488; margin-left: 6px; font-weight: 600;">{{ $supplement->dosage }}{{ $supplement->dosage_unit ? ' ' . $supplement->dosage_unit : '' }}</span>
+                            @endif
+                        </div>
+                        <div style="font-size: 8.5px; color: #6b7280; white-space: nowrap;">
+                            @if($supplement->timing)
+                                {{ $supplement->timing }}
+                            @endif
+                            @if($supplement->timing && $supplement->duration)
+                                &nbsp;·&nbsp;
+                            @endif
+                            @if($supplement->duration)
+                                {{ $supplement->duration }}
+                            @endif
+                        </div>
+                    </div>
+                    @if($supplement->notes)
+                        <div style="font-size: 8.5px; color: #6b7280; font-style: italic; margin-top: 2px;">{{ $supplement->notes }}</div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         @if($plan->notes)
         <div style="margin-top: 20px; padding: 14px 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
             <div style="font-size: 10px; font-weight: 700; color: #374151; margin-bottom: 6px;">Note generali</div>

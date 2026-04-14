@@ -19,7 +19,7 @@ const props = defineProps<{
 }>();
 
 // ─── View mode ───────────────────────────────────────────────────────────────
-const viewMode   = ref<'month' | 'week' | 'list'>('month');
+const viewMode   = ref<'month' | 'week' | 'day' | 'list'>('month');
 const showWeekend = ref(true);
 
 const visibleWeekDayLabels = computed(() => {
@@ -62,16 +62,24 @@ const weekLabel = computed(() => {
     return `${fmt(start)} – ${fmt(end)} ${start.getFullYear()}`;
 });
 
+const dayLabel = computed(() => {
+    return currentDate.value.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+});
+
 function prevPeriod() {
     const d = new Date(currentDate.value);
-    viewMode.value === 'week' ? d.setDate(d.getDate() - 7) : d.setMonth(d.getMonth() - 1);
+    if (viewMode.value === 'day') d.setDate(d.getDate() - 1);
+    else if (viewMode.value === 'week') d.setDate(d.getDate() - 7);
+    else d.setMonth(d.getMonth() - 1);
     currentDate.value = d;
     fetchMonth();
 }
 
 function nextPeriod() {
     const d = new Date(currentDate.value);
-    viewMode.value === 'week' ? d.setDate(d.getDate() + 7) : d.setMonth(d.getMonth() + 1);
+    if (viewMode.value === 'day') d.setDate(d.getDate() + 1);
+    else if (viewMode.value === 'week') d.setDate(d.getDate() + 7);
+    else d.setMonth(d.getMonth() + 1);
     currentDate.value = d;
     fetchMonth();
 }
@@ -88,7 +96,7 @@ function fetchMonth() {
 function goToToday() {
     currentDate.value = new Date();
     fetchMonth();
-    if (viewMode.value === 'week') nextTick(() => scrollToCurrentTime());
+    if (viewMode.value === 'week' || viewMode.value === 'day') nextTick(() => scrollToCurrentTime());
 }
 
 // ─── Filters ─────────────────────────────────────────────────────────────────
@@ -193,8 +201,54 @@ function scrollToCurrentTime() {
 }
 
 onMounted(() => {
-    if (viewMode.value === 'week') scrollToCurrentTime();
+    if (viewMode.value === 'week' || viewMode.value === 'day') scrollToCurrentTime();
 });
+
+// ─── Overlap layout (side-by-side for overlapping appointments) ─────────────
+interface LayoutSlot { apt: any; col: number; totalCols: number }
+
+function layoutAppointments(apts: any[]): LayoutSlot[] {
+    if (!apts.length) return [];
+    const sorted = [...apts].sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
+    const groups: any[][] = [];
+    let groupEnd = -Infinity;
+    let currentGroup: any[] = [];
+
+    for (const apt of sorted) {
+        const s = new Date(apt.starts_at).getTime();
+        const e = new Date(apt.ends_at).getTime();
+        if (s < groupEnd) {
+            currentGroup.push(apt);
+            groupEnd = Math.max(groupEnd, e);
+        } else {
+            if (currentGroup.length) groups.push(currentGroup);
+            currentGroup = [apt];
+            groupEnd = e;
+        }
+    }
+    if (currentGroup.length) groups.push(currentGroup);
+
+    const result: LayoutSlot[] = [];
+    for (const group of groups) {
+        const cols: number[] = [];
+        for (const apt of group) {
+            const s = new Date(apt.starts_at).getTime();
+            let col = 0;
+            while (cols[col] !== undefined && cols[col] > s) col++;
+            cols[col] = new Date(apt.ends_at).getTime();
+            result.push({ apt, col, totalCols: 0 });
+        }
+        const totalCols = cols.length;
+        for (const r of result) {
+            if (group.includes(r.apt)) r.totalCols = totalCols;
+        }
+    }
+    return result;
+}
+
+function dayAppointmentLayouts(date: Date | null): LayoutSlot[] {
+    return layoutAppointments(appointmentsForDay(date));
+}
 
 // ─── Drag & Drop ─────────────────────────────────────────────────────────────
 interface PendingMove {
@@ -507,6 +561,13 @@ function statusLabel(s: string) { return props.statuses.find(st => st.value === 
 function typeLabel(t: string)   { return props.types.find(tp => tp.value === t)?.label   || t; }
 
 const gridStyle = (cols: number) => ({ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` });
+
+function goToDay(date: Date) {
+    currentDate.value = new Date(date);
+    viewMode.value = 'day';
+    fetchMonth();
+    nextTick(() => scrollToCurrentTime());
+}
 </script>
 
 <template>
@@ -532,6 +593,9 @@ const gridStyle = (cols: number) => ({ display: 'grid', gridTemplateColumns: `re
                         </button>
                         <button @click="viewMode = 'week'; nextTick(scrollToCurrentTime)" :class="['flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border-l border-gray-200 transition', viewMode === 'week' ? 'bg-primary-500 text-white' : 'text-gray-600 hover:bg-gray-50']">
                             <CalendarDays class="h-4 w-4" /> Settimana
+                        </button>
+                        <button @click="viewMode = 'day'; nextTick(scrollToCurrentTime)" :class="['flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border-l border-gray-200 transition', viewMode === 'day' ? 'bg-primary-500 text-white' : 'text-gray-600 hover:bg-gray-50']">
+                            <Clock class="h-4 w-4" /> Giorno
                         </button>
                         <button @click="viewMode = 'list'" :class="['flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border-l border-gray-200 transition', viewMode === 'list' ? 'bg-primary-500 text-white' : 'text-gray-600 hover:bg-gray-50']">
                             <LayoutList class="h-4 w-4" /> Lista
@@ -607,7 +671,8 @@ const gridStyle = (cols: number) => ({ display: 'grid', gridTemplateColumns: `re
                         <div
                             v-for="d in weekDaysWithDates"
                             :key="d.toISOString()"
-                            :class="['py-3 text-center border-l border-gray-100 first:border-l-0', isToday(d) ? 'bg-primary-50' : '']"
+                            :class="['py-3 text-center border-l border-gray-100 first:border-l-0 cursor-pointer hover:bg-gray-50 transition', isToday(d) ? 'bg-primary-50' : '']"
+                            @click="goToDay(d)"
                         >
                             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide capitalize">
                                 {{ d.toLocaleDateString('it-IT', { weekday: 'short' }) }}
@@ -669,30 +734,144 @@ const gridStyle = (cols: number) => ({ display: 'grid', gridTemplateColumns: `re
                                     <div class="flex-1 border-t-2 border-red-500"></div>
                                 </div>
 
-                                <!-- Appointment blocks -->
+                                <!-- Appointment blocks (with overlap layout) -->
                                 <div
-                                    v-for="apt in appointmentsForDay(day)"
-                                    :key="apt.id"
-                                    class="absolute left-1.5 right-1.5 rounded-lg overflow-hidden z-10 cursor-grab active:cursor-grabbing shadow-sm select-none group"
-                                    :class="[aptBgColor(apt.status), draggingApt?.id === apt.id ? 'opacity-40' : '']"
-                                    :style="`top: ${aptTopPx(apt)}px; height: ${aptHeightPx(apt)}px; min-height: 22px`"
+                                    v-for="slot in dayAppointmentLayouts(day)"
+                                    :key="slot.apt.id"
+                                    class="absolute rounded-lg overflow-hidden z-10 cursor-grab active:cursor-grabbing shadow-sm select-none group"
+                                    :class="[aptBgColor(slot.apt.status), draggingApt?.id === slot.apt.id ? 'opacity-40' : '']"
+                                    :style="`top: ${aptTopPx(slot.apt)}px; height: ${aptHeightPx(slot.apt)}px; min-height: 22px; left: calc(${(slot.col / slot.totalCols) * 100}% + 2px); width: calc(${100 / slot.totalCols}% - 4px)`"
                                     draggable="true"
-                                    @dragstart="onDragStart($event, apt)"
+                                    @dragstart="onDragStart($event, slot.apt)"
                                     @dragend="onDragEnd"
-                                    @click.stop="openEdit(apt)"
+                                    @click.stop="openEdit(slot.apt)"
                                 >
                                     <div class="px-2 py-1 h-full overflow-hidden">
-                                        <p class="text-[11px] font-semibold leading-tight truncate">{{ apt.title }}</p>
-                                        <p class="text-[10px] opacity-70 leading-tight mt-0.5">{{ formatTime(apt.starts_at) }}–{{ formatTime(apt.ends_at) }}</p>
+                                        <p class="text-[11px] font-semibold leading-tight truncate">{{ slot.apt.title }}</p>
+                                        <p class="text-[10px] opacity-70 leading-tight mt-0.5">{{ formatTime(slot.apt.starts_at) }}–{{ formatTime(slot.apt.ends_at) }}</p>
                                     </div>
                                     <button
                                         type="button"
-                                        @click.stop="openEdit(apt)"
+                                        @click.stop="openEdit(slot.apt)"
                                         class="absolute top-0.5 right-0.5 p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 transition bg-white/40"
                                     >
                                         <Pencil class="h-2.5 w-2.5" />
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
+                <span v-for="s in statuses" :key="s.value" class="flex items-center gap-1.5">
+                    <span :class="['h-2 w-2 rounded-full', statusDot(s.value)]"></span> {{ s.label }}
+                </span>
+            </div>
+        </template>
+
+        <!-- ═══════════════════ CALENDARIO GIORNO (SINGLE DAY TIME GRID) ══════════════ -->
+        <template v-else-if="viewMode === 'day'">
+            <div class="flex items-center justify-between mb-4">
+                <button @click="prevPeriod" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 transition"><ChevronLeft class="h-5 w-5" /></button>
+                <div class="flex items-center gap-3">
+                    <button @click="goToToday" class="rounded-lg px-3 py-1.5 text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition">Oggi</button>
+                    <h2 class="text-base font-semibold text-gray-900 capitalize">{{ dayLabel }}</h2>
+                </div>
+                <button @click="nextPeriod" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 transition"><ChevronRight class="h-5 w-5" /></button>
+            </div>
+
+            <div class="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                <!-- Day header -->
+                <div class="flex border-b border-gray-100 bg-white z-10">
+                    <div class="w-14 flex-shrink-0 border-r border-gray-100"></div>
+                    <div class="flex-1">
+                        <div :class="['py-3 text-center', isToday(currentDate) ? 'bg-primary-50' : '']">
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide capitalize">
+                                {{ currentDate.toLocaleDateString('it-IT', { weekday: 'long' }) }}
+                            </p>
+                            <span :class="['inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold mt-0.5',
+                                isToday(currentDate) ? 'bg-primary-500 text-white' : 'text-gray-800']">
+                                {{ currentDate.getDate() }}
+                            </span>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ appointmentsForDay(currentDate).length }} appuntament{{ appointmentsForDay(currentDate).length === 1 ? 'o' : 'i' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scrollable time grid -->
+                <div ref="timeGridRef" class="overflow-y-auto" style="max-height: 72vh">
+                    <div class="flex" :style="`height: ${TOTAL_PX}px`">
+                        <!-- Time labels column -->
+                        <div class="w-14 flex-shrink-0 relative border-r border-gray-100 select-none">
+                            <div
+                                v-for="h in hours"
+                                :key="h"
+                                class="absolute right-2 text-[11px] text-gray-400 font-medium -translate-y-2"
+                                :style="`top: ${h * HOUR_HEIGHT}px`"
+                            >
+                                {{ h < END_HOUR ? `${String(h).padStart(2,'0')}:00` : '' }}
+                            </div>
+                        </div>
+
+                        <!-- Single day column -->
+                        <div class="flex-1 relative">
+                            <!-- 15-min slot divs -->
+                            <div
+                                v-for="slot in timeSlots"
+                                :key="slot.key"
+                                :class="[
+                                    'absolute left-0 right-0 cursor-pointer transition-colors',
+                                    slot.minute === 0 ? 'border-t border-gray-200' : 'border-t border-gray-100/60',
+                                    hoveredSlotId === slotId(currentDate, slot) && draggingApt ? 'bg-primary-50/80' : 'hover:bg-gray-50/60',
+                                ]"
+                                :style="`top: ${slot.hour * HOUR_HEIGHT + (slot.minute / 60) * HOUR_HEIGHT}px; height: ${HOUR_HEIGHT / 4}px`"
+                                @dragover.prevent="onSlotDragOver($event, currentDate, slot)"
+                                @dragleave="hoveredSlotId = null"
+                                @drop.prevent="onSlotDrop($event, currentDate, slot)"
+                                @click="onSlotClick(currentDate, slot)"
+                            ></div>
+
+                            <!-- Current time indicator -->
+                            <div
+                                v-if="isToday(currentDate)"
+                                class="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                                :style="`top: ${currentTimeTopPx}px`"
+                            >
+                                <div class="h-2.5 w-2.5 rounded-full bg-red-500 -ml-1.5 flex-shrink-0"></div>
+                                <div class="flex-1 border-t-2 border-red-500"></div>
+                            </div>
+
+                            <!-- Appointment blocks (with overlap layout) -->
+                            <div
+                                v-for="slot in dayAppointmentLayouts(currentDate)"
+                                :key="slot.apt.id"
+                                class="absolute rounded-lg overflow-hidden z-10 cursor-grab active:cursor-grabbing shadow-sm select-none group"
+                                :class="[aptBgColor(slot.apt.status), draggingApt?.id === slot.apt.id ? 'opacity-40' : '']"
+                                :style="`top: ${aptTopPx(slot.apt)}px; height: ${aptHeightPx(slot.apt)}px; min-height: 28px; left: calc(${(slot.col / slot.totalCols) * 100}% + 4px); width: calc(${100 / slot.totalCols}% - 8px)`"
+                                draggable="true"
+                                @dragstart="onDragStart($event, slot.apt)"
+                                @dragend="onDragEnd"
+                                @click.stop="openEdit(slot.apt)"
+                            >
+                                <div class="px-3 py-1.5 h-full overflow-hidden">
+                                    <p class="text-sm font-semibold leading-tight truncate">{{ slot.apt.title }}</p>
+                                    <p class="text-xs opacity-70 leading-tight mt-0.5">{{ formatTime(slot.apt.starts_at) }} – {{ formatTime(slot.apt.ends_at) }}</p>
+                                    <p v-if="slot.apt.client?.user?.name" class="text-xs opacity-60 leading-tight mt-0.5 flex items-center gap-1">
+                                        <User class="h-3 w-3" /> {{ slot.apt.client.user.name }}
+                                    </p>
+                                    <p v-if="slot.apt.location" class="text-xs opacity-60 leading-tight mt-0.5 flex items-center gap-1">
+                                        <MapPin class="h-3 w-3" /> {{ slot.apt.location }}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    @click.stop="openEdit(slot.apt)"
+                                    class="absolute top-1 right-1 p-1 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 transition bg-white/40"
+                                >
+                                    <Pencil class="h-3 w-3" />
+                                </button>
                             </div>
                         </div>
                     </div>

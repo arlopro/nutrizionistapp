@@ -124,13 +124,8 @@ const steps = [
         <nav class="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-xl transition-all duration-300">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center animate-logo-spin-once">
-                            <UtensilsCrossed class="text-white" style="width:18px;height:18px" />
-                        </div>
-                        <span class="text-lg font-extrabold tracking-tight text-gray-900">
-                            Nutrizionist<span class="text-primary-600">App</span>
-                        </span>
+                    <div class="flex items-center">
+                        <img src="/images/logo-nutrizionistapp.png" alt="NutrizionistApp" class="h-8 w-auto" />
                     </div>
                     <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
                         <a href="#features" class="hover:text-gray-900 transition-colors duration-200">Funzionalità</a>
@@ -261,9 +256,8 @@ const steps = [
                         <div class="bg-gray-50 flex" style="min-height: 360px">
                             <!-- Sidebar -->
                             <div class="w-48 bg-white border-r border-gray-200 p-3 flex flex-col gap-1 flex-shrink-0">
-                                <div class="flex items-center gap-2 px-2 py-2 mb-2">
-                                    <div class="h-6 w-6 rounded-md bg-gradient-to-br from-primary-500 to-primary-700" />
-                                    <span class="text-xs font-bold text-gray-900">NutrizionistApp</span>
+                                <div class="flex items-center px-2 py-2 mb-2">
+                                    <img src="/images/logo-nutrizionistapp.png" alt="NutrizionistApp" class="h-5 w-auto" />
                                 </div>
                                 <div v-for="(item, i) in ['Dashboard','Clienti','Alimenti','Ricette','Piani','Appuntamenti','Monitoraggio']" :key="i"
                                     :class="['flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors', i === 0 ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-gray-500 hover:bg-gray-50']">
@@ -669,9 +663,7 @@ const steps = [
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
                     <div class="col-span-2 md:col-span-1">
                         <div class="flex items-center gap-2 mb-3">
-                            <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
-                                <UtensilsCrossed class="text-white" style="width:14px;height:14px" />
-                            </div>
+                            <img src="/images/icona-nutrizionistapp.png" alt="NutrizionistApp" class="h-7 w-7 rounded-lg" />
                             <span class="font-extrabold text-white">NutrizionistApp</span>
                         </div>
                         <p class="text-sm leading-relaxed">La piattaforma SaaS per nutrizionisti professionisti italiani.</p>

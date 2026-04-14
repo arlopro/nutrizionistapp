@@ -21,6 +21,13 @@ class Food extends Model
             'carbs_per_100g' => 'decimal:1',
             'fat_per_100g' => 'decimal:1',
             'fiber_per_100g' => 'decimal:1',
+            'sodium_mg' => 'decimal:1',
+            'potassium_mg' => 'decimal:1',
+            'calcium_mg' => 'decimal:1',
+            'iron_mg' => 'decimal:1',
+            'vitamin_d_mcg' => 'decimal:1',
+            'vitamin_b12_mcg' => 'decimal:1',
+            'glycemic_index' => 'integer',
         ];
     }
 

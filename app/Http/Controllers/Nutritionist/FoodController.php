@@ -47,6 +47,13 @@ class FoodController extends Controller
             'carbs_per_100g' => 'required|numeric|min:0',
             'fat_per_100g' => 'required|numeric|min:0',
             'fiber_per_100g' => 'nullable|numeric|min:0',
+            'sodium_mg' => 'nullable|numeric|min:0',
+            'potassium_mg' => 'nullable|numeric|min:0',
+            'calcium_mg' => 'nullable|numeric|min:0',
+            'iron_mg' => 'nullable|numeric|min:0',
+            'vitamin_d_mcg' => 'nullable|numeric|min:0',
+            'vitamin_b12_mcg' => 'nullable|numeric|min:0',
+            'glycemic_index' => 'nullable|integer|min:0|max:200',
             'notes' => 'nullable|string',
         ]);
 
@@ -81,6 +88,13 @@ class FoodController extends Controller
             'carbs_per_100g' => 'required|numeric|min:0',
             'fat_per_100g' => 'required|numeric|min:0',
             'fiber_per_100g' => 'nullable|numeric|min:0',
+            'sodium_mg' => 'nullable|numeric|min:0',
+            'potassium_mg' => 'nullable|numeric|min:0',
+            'calcium_mg' => 'nullable|numeric|min:0',
+            'iron_mg' => 'nullable|numeric|min:0',
+            'vitamin_d_mcg' => 'nullable|numeric|min:0',
+            'vitamin_b12_mcg' => 'nullable|numeric|min:0',
+            'glycemic_index' => 'nullable|integer|min:0|max:200',
             'notes' => 'nullable|string',
         ]);
 

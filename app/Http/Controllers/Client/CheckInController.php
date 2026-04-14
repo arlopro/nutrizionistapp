@@ -118,4 +118,17 @@ class CheckInController extends Controller
             'measurementTypes' => collect(MeasurementType::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()]),
         ]);
     }
+
+    public function updatePatientNotes(Request $request, CheckIn $checkIn)
+    {
+        $this->authorize('update', $checkIn);
+
+        $validated = $request->validate([
+            'patient_notes' => 'nullable|string',
+        ]);
+
+        $checkIn->update($validated);
+
+        return back()->with('success', 'Note aggiornate.');
+    }
 }

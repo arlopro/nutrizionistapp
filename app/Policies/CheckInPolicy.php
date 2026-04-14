@@ -26,6 +26,14 @@ class CheckInPolicy
 
     public function update(User $user, CheckIn $checkIn): bool
     {
-        return $user->isNutritionist() && $checkIn->client?->nutritionist_id === $user->id;
+        if ($user->isNutritionist()) {
+            return $checkIn->client?->nutritionist_id === $user->id;
+        }
+
+        if ($user->isClient()) {
+            return $checkIn->client_id === $user->clientProfile?->id;
+        }
+
+        return false;
     }
 }

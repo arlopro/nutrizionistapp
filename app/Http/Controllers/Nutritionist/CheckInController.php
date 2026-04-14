@@ -61,6 +61,29 @@ class CheckInController extends Controller
         ]);
     }
 
+    public function photoCompare(Request $request)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:client_profiles,id',
+        ]);
+
+        $client = \App\Models\ClientProfile::where('id', $validated['client_id'])
+            ->where('nutritionist_id', $request->user()->id)
+            ->with('user:id,name')
+            ->firstOrFail();
+
+        $checkInsWithPhotos = CheckIn::where('client_id', $client->id)
+            ->whereHas('photos')
+            ->with('photos')
+            ->orderByDesc('date')
+            ->get(['id', 'date', 'weight_kg']);
+
+        return Inertia::render('Nutritionist/CheckIns/PhotoCompare', [
+            'client' => $client,
+            'checkIns' => $checkInsWithPhotos,
+        ]);
+    }
+
     public function addNotes(Request $request, CheckIn $checkIn)
     {
         $checkIn->load('client');

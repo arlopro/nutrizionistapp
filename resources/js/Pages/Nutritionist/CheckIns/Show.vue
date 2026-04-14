@@ -8,7 +8,7 @@ import {
     Chart as ChartJS, CategoryScale, LinearScale, PointElement,
     LineElement, Tooltip, Filler,
 } from 'chart.js';
-import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, User, TrendingDown, TrendingUp, Minus, Activity, Percent } from 'lucide-vue-next';
+import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, User, TrendingDown, TrendingUp, Minus, Activity, Percent, ImageIcon } from 'lucide-vue-next';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
@@ -283,7 +283,15 @@ const bodyCompChartOptions = {
 
             <!-- Foto -->
             <div v-if="checkIn.photos?.length > 0" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
-                <h2 class="text-base font-semibold text-gray-900 mb-3">Foto</h2>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-semibold text-gray-900">Foto</h2>
+                    <Link
+                        :href="route('nutritionist.check-ins.photo-compare', { client_id: checkIn.client_id })"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-100 transition"
+                    >
+                        <ImageIcon class="h-3.5 w-3.5" /> Confronto prima/dopo
+                    </Link>
+                </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div v-for="photo in checkIn.photos" :key="photo.id" class="rounded-lg overflow-hidden">
                         <img :src="`/storage/${photo.file_path}`" class="w-full h-40 object-cover" />
@@ -296,6 +304,13 @@ const bodyCompChartOptions = {
             <div v-if="checkIn.notes" class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
                 <h2 class="text-base font-semibold text-gray-900 mb-2">Note del cliente</h2>
                 <p class="text-sm text-gray-600 whitespace-pre-line">{{ checkIn.notes }}</p>
+            </div>
+
+            <!-- Annotazioni paziente (sintomi, aderenza) -->
+            <div v-if="checkIn.patient_notes" class="rounded-2xl bg-amber-50 border border-amber-100 shadow-sm p-6 mb-6">
+                <h2 class="text-base font-semibold text-amber-900 mb-2">Annotazioni del paziente</h2>
+                <p class="text-xs text-amber-600 mb-2">Sintomi, aderenza al piano e osservazioni del paziente.</p>
+                <p class="text-sm text-amber-800 whitespace-pre-line">{{ checkIn.patient_notes }}</p>
             </div>
 
             <!-- Feedback nutrizionista -->

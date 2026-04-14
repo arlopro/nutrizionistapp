@@ -20,6 +20,13 @@ const form = useForm({
     carbs_per_100g: props.food.carbs_per_100g,
     fat_per_100g: props.food.fat_per_100g,
     fiber_per_100g: props.food.fiber_per_100g || '',
+    sodium_mg: props.food.sodium_mg || '',
+    potassium_mg: props.food.potassium_mg || '',
+    calcium_mg: props.food.calcium_mg || '',
+    iron_mg: props.food.iron_mg || '',
+    vitamin_d_mcg: props.food.vitamin_d_mcg || '',
+    vitamin_b12_mcg: props.food.vitamin_b12_mcg || '',
+    glycemic_index: props.food.glycemic_index || '',
     notes: props.food.notes || '',
 });
 
@@ -79,6 +86,40 @@ function submit() {
                     <div>
                         <InputLabel for="fiber" value="Fibre (g)" />
                         <TextInput id="fiber" v-model="form.fiber_per_100g" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-4">Micronutrienti (per 100g) — opzionali</h2>
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <InputLabel for="sodium" value="Sodio (mg)" />
+                        <TextInput id="sodium" v-model="form.sodium_mg" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <InputLabel for="potassium" value="Potassio (mg)" />
+                        <TextInput id="potassium" v-model="form.potassium_mg" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <InputLabel for="calcium" value="Calcio (mg)" />
+                        <TextInput id="calcium" v-model="form.calcium_mg" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <InputLabel for="iron" value="Ferro (mg)" />
+                        <TextInput id="iron" v-model="form.iron_mg" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <InputLabel for="vitamin_d" value="Vitamina D (mcg)" />
+                        <TextInput id="vitamin_d" v-model="form.vitamin_d_mcg" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <InputLabel for="vitamin_b12" value="Vitamina B12 (mcg)" />
+                        <TextInput id="vitamin_b12" v-model="form.vitamin_b12_mcg" type="number" step="0.1" min="0" class="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <InputLabel for="glycemic_index" value="Indice glicemico" />
+                        <TextInput id="glycemic_index" v-model="form.glycemic_index" type="number" step="1" min="0" max="200" class="mt-1 block w-full" />
                     </div>
                 </div>
             </div>

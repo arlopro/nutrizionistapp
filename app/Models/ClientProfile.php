@@ -64,6 +64,16 @@ class ClientProfile extends Model
         return $this->hasMany(LabResult::class, 'client_id');
     }
 
+    public function anamnesisSubmissions(): HasMany
+    {
+        return $this->hasMany(AnamnesisSubmission::class, 'client_id');
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'client_id');
+    }
+
     /**
      * Un cliente è "attivo" se ha almeno un piano nutrizionale collegato.
      */

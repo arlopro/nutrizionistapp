@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import {
     LayoutDashboard,
     Users,
@@ -12,7 +11,6 @@ import {
     User,
     LogOut,
     Menu,
-    X,
     ChevronDown,
     CookingPot,
     Settings,
@@ -20,6 +18,7 @@ import {
     ShieldAlert,
     FileText,
     FlaskConical,
+    MessageSquare,
 } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
 
@@ -36,29 +35,76 @@ function stopImpersonating() {
     router.post(route('impersonate.stop'));
 }
 
-const nutritionistNav = [
-    { name: 'Dashboard', href: 'nutritionist.dashboard', icon: LayoutDashboard },
-    { name: 'Clienti', href: 'nutritionist.clients.index', icon: Users },
-    { name: 'Anamnesi', href: 'nutritionist.anamnesis.index', icon: FileText },
-    { name: 'Alimenti', href: 'nutritionist.foods.index', icon: Apple },
-    { name: 'Ricette', href: 'nutritionist.recipes.index', icon: CookingPot },
-    { name: 'Piani', href: 'nutritionist.plans.index', icon: UtensilsCrossed },
-    { name: 'Appuntamenti', href: 'nutritionist.appointments.index', icon: CalendarDays },
-    { name: 'Monitoraggio', href: 'nutritionist.check-ins.index', icon: ClipboardCheck },
-    { name: 'Esami', href: 'nutritionist.lab-results.index', icon: FlaskConical },
-    { name: 'Abbonamento', href: 'nutritionist.billing', icon: CreditCard },
-    { name: 'Impostazioni', href: 'nutritionist.settings', icon: Settings },
+interface NavItem {
+    name: string;
+    href: string;
+    icon: any;
+}
+
+interface NavGroup {
+    label?: string;
+    items: NavItem[];
+}
+
+const nutritionistNavGroups: NavGroup[] = [
+    {
+        items: [
+            { name: 'Dashboard', href: 'nutritionist.dashboard', icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: 'Clienti',
+        items: [
+            { name: 'Clienti', href: 'nutritionist.clients.index', icon: Users },
+            { name: 'Messaggi', href: 'nutritionist.messages.index', icon: MessageSquare },
+            { name: 'Appuntamenti', href: 'nutritionist.appointments.index', icon: CalendarDays },
+            { name: 'Monitoraggio', href: 'nutritionist.check-ins.index', icon: ClipboardCheck },
+            { name: 'Anamnesi', href: 'nutritionist.anamnesis.index', icon: FileText },
+            { name: 'Esami', href: 'nutritionist.lab-results.index', icon: FlaskConical },
+        ],
+    },
+    {
+        label: 'Libreria',
+        items: [
+            { name: 'Alimenti', href: 'nutritionist.foods.index', icon: Apple },
+            { name: 'Ricette', href: 'nutritionist.recipes.index', icon: CookingPot },
+            { name: 'Piani', href: 'nutritionist.plans.index', icon: UtensilsCrossed },
+        ],
+    },
 ];
 
-const clientNav = [
-    { name: 'Dashboard', href: 'client.dashboard', icon: LayoutDashboard },
-    { name: 'Il mio Piano', href: 'client.plan', icon: UtensilsCrossed },
-    { name: 'Monitoraggio', href: 'client.check-ins.index', icon: ClipboardCheck },
-    { name: 'Appuntamenti', href: 'client.appointments', icon: CalendarDays },
+const clientNavGroups: NavGroup[] = [
+    {
+        items: [
+            { name: 'Dashboard', href: 'client.dashboard', icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: 'La mia salute',
+        items: [
+            { name: 'Il mio Piano', href: 'client.plan', icon: UtensilsCrossed },
+            { name: 'Monitoraggio', href: 'client.check-ins.index', icon: ClipboardCheck },
+            { name: 'Questionari', href: 'client.anamnesis.index', icon: FileText },
+            { name: 'Appuntamenti', href: 'client.appointments', icon: CalendarDays },
+            { name: 'Messaggi', href: 'client.messages.index', icon: MessageSquare },
+        ],
+    },
+];
+
+const navGroups = computed(() => isNutritionist.value ? nutritionistNavGroups : clientNavGroups);
+
+const nutritionistProfileMenu = [
+    { name: 'Profilo', href: 'profile.edit', icon: User },
+    { name: 'Impostazioni', href: 'nutritionist.settings', icon: Settings },
+    { name: 'Abbonamento', href: 'nutritionist.billing', icon: CreditCard },
+];
+
+const clientProfileMenu = [
+    { name: 'Profilo', href: 'profile.edit', icon: User },
     { name: 'Impostazioni', href: 'client.settings', icon: Settings },
 ];
 
-const navigation = computed(() => isNutritionist.value ? nutritionistNav : clientNav);
+const profileMenu = computed(() => isNutritionist.value ? nutritionistProfileMenu : clientProfileMenu);
 
 function isRouteAvailable(name: string): boolean {
     try {
@@ -106,47 +152,51 @@ function isActive(name: string): boolean {
             ]"
         >
             <!-- Logo area -->
-            <div class="flex h-16 items-center gap-3 px-6 border-b border-gray-100">
-                <ApplicationLogo class="h-9 w-9" />
-                <span class="text-lg font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
-                    NutrizionistApp
-                </span>
+            <div class="flex h-16 items-center px-6 border-b border-gray-100">
+                <img src="/images/logo-nutrizionistapp.png" alt="NutrizionistApp" class="h-8 w-auto" />
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-                <template v-for="item in navigation" :key="item.name">
-                    <Link
-                        v-if="isRouteAvailable(item.href)"
-                        :href="route(item.href)"
-                        :class="[
-                            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
-                            isActive(item.href)
-                                ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 text-primary-700'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        ]"
-                    >
-                        <component
-                            :is="item.icon"
-                            :class="[
-                                'h-5 w-5 flex-shrink-0',
-                                isActive(item.href) ? 'text-primary-600' : 'text-gray-400'
-                            ]"
-                        />
-                        {{ item.name }}
-                        <div
-                            v-if="isActive(item.href)"
-                            class="ml-auto h-1.5 w-1.5 rounded-full bg-primary-500"
-                        />
-                    </Link>
-                    <span
-                        v-else
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 cursor-not-allowed"
-                    >
-                        <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-                        {{ item.name }}
-                    </span>
-                </template>
+            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+                <div v-for="(group, gi) in navGroups" :key="gi">
+                    <p v-if="group.label" class="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                        {{ group.label }}
+                    </p>
+                    <div class="space-y-0.5">
+                        <template v-for="item in group.items" :key="item.name">
+                            <Link
+                                v-if="isRouteAvailable(item.href)"
+                                :href="route(item.href)"
+                                :class="[
+                                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
+                                    isActive(item.href)
+                                        ? 'bg-gradient-to-r from-primary-50 to-primary-100/50 text-primary-700'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                ]"
+                            >
+                                <component
+                                    :is="item.icon"
+                                    :class="[
+                                        'h-5 w-5 flex-shrink-0',
+                                        isActive(item.href) ? 'text-primary-600' : 'text-gray-400'
+                                    ]"
+                                />
+                                {{ item.name }}
+                                <div
+                                    v-if="isActive(item.href)"
+                                    class="ml-auto h-1.5 w-1.5 rounded-full bg-primary-500"
+                                />
+                            </Link>
+                            <span
+                                v-else
+                                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 cursor-not-allowed"
+                            >
+                                <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+                                {{ item.name }}
+                            </span>
+                        </template>
+                    </div>
+                </div>
             </nav>
 
             <!-- User section at bottom -->
@@ -172,14 +222,18 @@ function isActive(name: string): boolean {
                         v-if="userMenuOpen"
                         class="absolute bottom-full left-0 mb-1 w-full rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
                     >
-                        <Link
-                            :href="route('profile.edit')"
-                            class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            @click="userMenuOpen = false"
-                        >
-                            <User class="h-4 w-4" />
-                            Profilo
-                        </Link>
+                        <template v-for="item in profileMenu" :key="item.name">
+                            <Link
+                                v-if="isRouteAvailable(item.href)"
+                                :href="route(item.href)"
+                                class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                @click="userMenuOpen = false"
+                            >
+                                <component :is="item.icon" class="h-4 w-4 text-gray-400" />
+                                {{ item.name }}
+                            </Link>
+                        </template>
+                        <div class="my-1 border-t border-gray-100" />
                         <Link
                             :href="route('logout')"
                             method="post"

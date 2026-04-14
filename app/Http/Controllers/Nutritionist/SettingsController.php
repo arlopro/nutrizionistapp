@@ -15,10 +15,11 @@ class SettingsController extends Controller
         $profile = $user->nutritionistProfile;
 
         return Inertia::render('Nutritionist/Settings', [
-            'profile'   => $profile,
-            'logoUrl'   => $profile?->logo ? Storage::disk('public')->url($profile->logo) : null,
-            'userPhone' => $user->phone,
-            'locations' => $profile?->locations ?? [],
+            'profile'              => $profile,
+            'logoUrl'              => $profile?->logo ? Storage::disk('public')->url($profile->logo) : null,
+            'userPhone'            => $user->phone,
+            'locations'            => $profile?->locations ?? [],
+            'notificationSettings' => $profile?->mergedNotificationSettings() ?? (new \App\Models\NutritionistProfile)->defaultNotificationSettings(),
         ]);
     }
 
@@ -98,6 +99,28 @@ class SettingsController extends Controller
         }
 
         return back()->with('success', 'Luoghi aggiornati.');
+    }
+
+    public function updateNotifications(Request $request)
+    {
+        $validated = $request->validate([
+            'appointment_reminder'       => 'required|boolean',
+            'appointment_reminder_hours' => 'required|integer|in:1,2,4,12,24,48',
+            'checkin_reminder'           => 'required|boolean',
+            'checkin_reminder_day'       => 'required|string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'plan_delivered'             => 'required|boolean',
+        ]);
+
+        $user    = $request->user();
+        $profile = $user->nutritionistProfile;
+
+        if ($profile) {
+            $profile->update(['notification_settings' => $validated]);
+        } else {
+            $user->nutritionistProfile()->create(['notification_settings' => $validated]);
+        }
+
+        return back()->with('success', 'Impostazioni notifiche salvate.');
     }
 
     public function deleteLogo(Request $request)

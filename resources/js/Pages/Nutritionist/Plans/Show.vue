@@ -6,6 +6,7 @@ import {
     ArrowLeft, Pencil, Trash2, Plus, Search, ChefHat,
     Flame, Beef, Wheat, Droplets, Calendar, User, X,
     Copy, FileText, LayoutList, ChevronsRight, BookTemplate, Download, GitBranch,
+    Pill, Clock, Timer,
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -330,6 +331,80 @@ function onQuantityChange(itemId: number, value: number) {
         updateItemQuantity(itemId, value);
     }, 600);
 }
+
+// --- Supplements ---
+const showAddSupplement = ref(false);
+const addSupplementForm = useForm({
+    name: '',
+    dosage: '',
+    dosage_unit: '',
+    timing: '',
+    duration: '',
+    notes: '',
+});
+
+const editingSupplementId = ref<number | null>(null);
+const editSupplementForm = useForm({
+    name: '',
+    dosage: '',
+    dosage_unit: '',
+    timing: '',
+    duration: '',
+    notes: '',
+});
+
+const dosageUnits = [
+    { value: 'mg', label: 'mg' },
+    { value: 'g', label: 'g' },
+    { value: 'mcg', label: 'mcg (µg)' },
+    { value: 'ml', label: 'ml' },
+    { value: 'UI', label: 'UI' },
+    { value: 'capsule', label: 'capsule' },
+    { value: 'compresse', label: 'compresse' },
+    { value: 'gocce', label: 'gocce' },
+    { value: 'bustine', label: 'bustine' },
+    { value: 'misurino', label: 'misurino' },
+];
+
+function openAddSupplement() {
+    addSupplementForm.reset();
+    showAddSupplement.value = true;
+}
+
+function submitAddSupplement() {
+    addSupplementForm.post(route('nutritionist.plans.supplements.store', props.plan.id), {
+        preserveScroll: true,
+        onSuccess: () => { showAddSupplement.value = false; },
+    });
+}
+
+function startEditSupplement(supplement: any) {
+    editingSupplementId.value = supplement.id;
+    editSupplementForm.name = supplement.name;
+    editSupplementForm.dosage = supplement.dosage || '';
+    editSupplementForm.dosage_unit = supplement.dosage_unit || '';
+    editSupplementForm.timing = supplement.timing || '';
+    editSupplementForm.duration = supplement.duration || '';
+    editSupplementForm.notes = supplement.notes || '';
+}
+
+function cancelEditSupplement() {
+    editingSupplementId.value = null;
+}
+
+function submitEditSupplement(supplementId: number) {
+    editSupplementForm.patch(route('nutritionist.plans.supplements.update', [props.plan.id, supplementId]), {
+        preserveScroll: true,
+        onSuccess: () => { editingSupplementId.value = null; },
+    });
+}
+
+function deleteSupplement(supplementId: number) {
+    if (!confirm('Eliminare questo integratore?')) return;
+    router.delete(route('nutritionist.plans.supplements.destroy', [props.plan.id, supplementId]), {
+        preserveScroll: true,
+    });
+}
 </script>
 
 <template>
@@ -532,6 +607,15 @@ function onQuantityChange(itemId: number, value: number) {
                                             {{ (item.food.carbs_per_100g * Number(item.quantity_grams) / 100).toFixed(1) }}g C ·
                                             {{ (item.food.fat_per_100g * Number(item.quantity_grams) / 100).toFixed(1) }}g G
                                         </div>
+                                        <div v-if="item.food && item.quantity_grams && (item.food.sodium_mg || item.food.calcium_mg || item.food.iron_mg || item.food.vitamin_d_mcg || item.food.vitamin_b12_mcg || item.food.glycemic_index)" class="text-xs text-teal-500 mt-0.5">
+                                            <template v-if="item.food.sodium_mg">Na {{ (item.food.sodium_mg * Number(item.quantity_grams) / 100).toFixed(0) }}mg</template>
+                                            <template v-if="item.food.potassium_mg">{{ item.food.sodium_mg ? ' · ' : '' }}K {{ (item.food.potassium_mg * Number(item.quantity_grams) / 100).toFixed(0) }}mg</template>
+                                            <template v-if="item.food.calcium_mg"> · Ca {{ (item.food.calcium_mg * Number(item.quantity_grams) / 100).toFixed(0) }}mg</template>
+                                            <template v-if="item.food.iron_mg"> · Fe {{ (item.food.iron_mg * Number(item.quantity_grams) / 100).toFixed(1) }}mg</template>
+                                            <template v-if="item.food.vitamin_d_mcg"> · VitD {{ (item.food.vitamin_d_mcg * Number(item.quantity_grams) / 100).toFixed(1) }}mcg</template>
+                                            <template v-if="item.food.vitamin_b12_mcg"> · B12 {{ (item.food.vitamin_b12_mcg * Number(item.quantity_grams) / 100).toFixed(1) }}mcg</template>
+                                            <template v-if="item.food.glycemic_index"> · IG {{ item.food.glycemic_index }}</template>
+                                        </div>
                                         <div v-else-if="item.recipe" class="text-xs text-gray-400 mt-0.5">
                                             Ricetta completa
                                         </div>
@@ -613,6 +697,140 @@ function onQuantityChange(itemId: number, value: number) {
             <Plus class="h-4 w-4 inline mr-1" />
             Aggiungi pasto a {{ days[activeDay]?.label }}
         </button>
+
+        <!-- Integratori / Supplementi -->
+        <div class="mt-10 mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <Pill class="h-5 w-5 text-teal-500" />
+                    <h2 class="text-lg font-semibold text-gray-900">Integratori / Supplementi</h2>
+                </div>
+                <button @click="openAddSupplement" class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100 transition">
+                    <Plus class="h-3.5 w-3.5" /> Aggiungi
+                </button>
+            </div>
+
+            <div v-if="(plan.supplements || []).length === 0" class="rounded-2xl border-2 border-dashed border-gray-200 py-8 text-center text-sm text-gray-400">
+                <Pill class="h-6 w-6 mx-auto mb-2 text-gray-300" />
+                Nessun integratore aggiunto. Clicca "Aggiungi" per inserire un protocollo di integrazione.
+            </div>
+
+            <div v-else class="space-y-2">
+                <div v-for="supplement in plan.supplements" :key="supplement.id" class="rounded-xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+                    <!-- Vista normale -->
+                    <div v-if="editingSupplementId !== supplement.id" class="px-5 py-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-gray-900">{{ supplement.name }}</span>
+                                    <span v-if="supplement.dosage" class="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                                        {{ supplement.dosage }}{{ supplement.dosage_unit ? ' ' + supplement.dosage_unit : '' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                                    <span v-if="supplement.timing" class="flex items-center gap-1">
+                                        <Clock class="h-3 w-3" /> {{ supplement.timing }}
+                                    </span>
+                                    <span v-if="supplement.duration" class="flex items-center gap-1">
+                                        <Timer class="h-3 w-3" /> {{ supplement.duration }}
+                                    </span>
+                                </div>
+                                <p v-if="supplement.notes" class="text-xs text-gray-400 mt-1 italic">{{ supplement.notes }}</p>
+                            </div>
+                            <div class="flex items-center gap-1 ml-3">
+                                <button @click="startEditSupplement(supplement)" class="p-1.5 text-gray-400 hover:text-teal-600 transition">
+                                    <Pencil class="h-3.5 w-3.5" />
+                                </button>
+                                <button @click="deleteSupplement(supplement.id)" class="p-1.5 text-gray-400 hover:text-red-500 transition">
+                                    <Trash2 class="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista editing inline -->
+                    <div v-else class="px-5 py-4 bg-teal-50/30">
+                        <form @submit.prevent="submitEditSupplement(supplement.id)" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="col-span-2">
+                                    <input v-model="editSupplementForm.name" type="text" placeholder="Nome integratore *" required class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                                </div>
+                                <div>
+                                    <input v-model="editSupplementForm.dosage" type="text" placeholder="Dosaggio (es: 1000)" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                                </div>
+                                <div>
+                                    <select v-model="editSupplementForm.dosage_unit" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500">
+                                        <option value="">Unità...</option>
+                                        <option v-for="u in dosageUnits" :key="u.value" :value="u.value">{{ u.label }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input v-model="editSupplementForm.timing" type="text" placeholder="Timing (es: a colazione)" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                                </div>
+                                <div>
+                                    <input v-model="editSupplementForm.duration" type="text" placeholder="Durata (es: 3 mesi)" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                                </div>
+                                <div class="col-span-2">
+                                    <input v-model="editSupplementForm.notes" type="text" placeholder="Note (opzionale)" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <button type="button" @click="cancelEditSupplement" class="rounded-lg px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 transition">Annulla</button>
+                                <button type="submit" :disabled="editSupplementForm.processing" class="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-600 transition">Salva</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Aggiungi Integratore -->
+        <div v-if="showAddSupplement" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" @click.self="showAddSupplement = false">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <Pill class="h-5 w-5 text-teal-500" />
+                        <h3 class="text-lg font-semibold text-gray-900">Aggiungi integratore</h3>
+                    </div>
+                    <button @click="showAddSupplement = false" class="p-1 text-gray-400 hover:text-gray-600"><X class="h-5 w-5" /></button>
+                </div>
+                <form @submit.prevent="submitAddSupplement" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome integratore *</label>
+                        <input v-model="addSupplementForm.name" type="text" required placeholder="Es: Vitamina D3, Omega-3, Creatina..." class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dosaggio</label>
+                            <input v-model="addSupplementForm.dosage" type="text" placeholder="Es: 1000, 2, 500" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unità</label>
+                            <select v-model="addSupplementForm.dosage_unit" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500">
+                                <option value="">Seleziona...</option>
+                                <option v-for="u in dosageUnits" :key="u.value" :value="u.value">{{ u.label }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Timing / Quando assumerlo</label>
+                        <input v-model="addSupplementForm.timing" type="text" placeholder="Es: a colazione, dopo allenamento, prima di dormire" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Durata</label>
+                        <input v-model="addSupplementForm.duration" type="text" placeholder="Es: 3 mesi, continuativo, 30 giorni" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Note (opzionale)</label>
+                        <textarea v-model="addSupplementForm.notes" rows="2" placeholder="Es: Assumere con pasto grasso per migliore assorbimento" class="block w-full rounded-md border-gray-300 text-sm focus:border-teal-500 focus:ring-teal-500 resize-none"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="showAddSupplement = false" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 transition">Annulla</button>
+                        <button type="submit" :disabled="addSupplementForm.processing" class="rounded-lg bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-2 text-sm font-medium text-white hover:from-teal-600 hover:to-teal-700 transition">Aggiungi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Modal: Aggiungi Pasto -->
         <div v-if="showAddMeal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" @click.self="showAddMeal = false">
@@ -705,6 +923,12 @@ function onQuantityChange(itemId: number, value: number) {
                             <div>
                                 <span class="text-sm font-medium text-gray-900">{{ food.name }}</span>
                                 <span class="text-xs text-gray-400 block">{{ food.calories_per_100g }} kcal · {{ food.protein_per_100g }}g P · {{ food.carbs_per_100g }}g C · {{ food.fat_per_100g }}g G /100g</span>
+                                <span v-if="food.sodium_mg || food.calcium_mg || food.iron_mg || food.glycemic_index" class="text-xs text-teal-500 block">
+                                    <template v-if="food.sodium_mg">Na {{ food.sodium_mg }}mg</template>
+                                    <template v-if="food.calcium_mg"> · Ca {{ food.calcium_mg }}mg</template>
+                                    <template v-if="food.iron_mg"> · Fe {{ food.iron_mg }}mg</template>
+                                    <template v-if="food.glycemic_index"> · IG {{ food.glycemic_index }}</template>
+                                </span>
                             </div>
                             <Plus class="h-4 w-4 text-gray-300 flex-shrink-0" />
                         </button>

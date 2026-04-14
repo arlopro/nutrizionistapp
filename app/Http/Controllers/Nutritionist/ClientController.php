@@ -137,10 +137,16 @@ class ClientController extends Controller
             'checkIns' => fn ($q) => $q->orderBy('date', 'asc'),
             'checkIns.measurements',
             'appointments' => fn ($q) => $q->upcoming()->limit(5),
+            'anamnesisSubmissions' => fn ($q) => $q->with('template:id,name')->orderByDesc('sent_at'),
         ]);
+
+        $anamnesisTemplates = \App\Models\AnamnesisTemplate::where('nutritionist_id', auth()->id())
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('Nutritionist/Clients/Show', [
             'client' => $client,
+            'anamnesisTemplates' => $anamnesisTemplates,
         ]);
     }
 

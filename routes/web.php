@@ -16,8 +16,13 @@ use App\Http\Controllers\Nutritionist\AppointmentController;
 use App\Http\Controllers\Nutritionist\CheckInController as NutritionistCheckInController;
 use App\Http\Controllers\Nutritionist\NutritionalPlanController;
 use App\Http\Controllers\Nutritionist\PlanMealController;
+use App\Http\Controllers\Nutritionist\PlanSupplementController;
 use App\Http\Controllers\Nutritionist\RecipeController;
 use App\Http\Controllers\Nutritionist\AnamnesisTemplateController;
+use App\Http\Controllers\Nutritionist\AnamnesisSubmissionController;
+use App\Http\Controllers\Client\AnamnesisController as ClientAnamnesisController;
+use App\Http\Controllers\Client\MessageController as ClientMessageController;
+use App\Http\Controllers\Nutritionist\MessageController;
 use App\Http\Controllers\Nutritionist\LabResultController;
 use App\Http\Controllers\Nutritionist\OnboardingController;
 use App\Http\Controllers\Nutritionist\SettingsController;
@@ -62,10 +67,16 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
     Route::post('plans/{plan}/days/{day}/duplicate', [PlanMealController::class, 'duplicateDay'])->name('plans.days.duplicate');
     Route::post('plans/{plan}/days/{day}/apply-to-week', [PlanMealController::class, 'applyDayToWeek'])->name('plans.days.apply-to-week');
 
+    // Plan supplements
+    Route::post('plans/{plan}/supplements', [PlanSupplementController::class, 'store'])->name('plans.supplements.store');
+    Route::patch('plans/{plan}/supplements/{supplement}', [PlanSupplementController::class, 'update'])->name('plans.supplements.update');
+    Route::delete('plans/{plan}/supplements/{supplement}', [PlanSupplementController::class, 'destroy'])->name('plans.supplements.destroy');
+
     // Check-ins (nutritionist view)
     Route::get('check-ins', [NutritionistCheckInController::class, 'index'])->name('check-ins.index');
     Route::get('check-ins/{checkIn}', [NutritionistCheckInController::class, 'show'])->name('check-ins.show');
     Route::patch('check-ins/{checkIn}/notes', [NutritionistCheckInController::class, 'addNotes'])->name('check-ins.notes');
+    Route::get('check-ins/photo-compare', [NutritionistCheckInController::class, 'photoCompare'])->name('check-ins.photo-compare');
 
     // Appointments
     Route::get('appointments', [AppointmentController::class, 'index'])->name('appointments.index');
@@ -83,11 +94,19 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
     Route::resource('anamnesis', AnamnesisTemplateController::class)
         ->parameters(['anamnesis' => 'anamnesi'])
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('anamnesis/send', [AnamnesisSubmissionController::class, 'send'])->name('anamnesis.send');
+    Route::get('anamnesis/submissions/{submission}', [AnamnesisSubmissionController::class, 'show'])->name('anamnesis.submissions.show');
+
+    // Messages
+    Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('messages/{client}', [MessageController::class, 'show'])->name('messages.show');
+    Route::post('messages/{client}', [MessageController::class, 'store'])->name('messages.store');
 
     // Settings
     Route::get('settings', [SettingsController::class, 'index'])->name('settings');
     Route::post('settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::patch('settings/locations', [SettingsController::class, 'updateLocations'])->name('settings.locations.update');
+    Route::patch('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
     Route::delete('settings/logo', [SettingsController::class, 'deleteLogo'])->name('settings.logo.delete');
     Route::delete('settings/avatar', [SettingsController::class, 'deleteAvatar'])->name('settings.avatar.delete');
 
@@ -107,7 +126,13 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->name('client.')->g
     Route::get('/plan', [ClientPlanController::class, 'index'])->name('plan');
     Route::post('/meals/{meal}/toggle-complete', [ClientMealCompletionController::class, 'toggle'])->name('meals.toggle-complete');
     Route::resource('check-ins', ClientCheckInController::class)->only(['index', 'create', 'store', 'show']);
+    Route::patch('check-ins/{checkIn}/patient-notes', [ClientCheckInController::class, 'updatePatientNotes'])->name('check-ins.patient-notes');
+    Route::get('/anamnesis', [ClientAnamnesisController::class, 'index'])->name('anamnesis.index');
+    Route::get('/anamnesis/{submission}', [ClientAnamnesisController::class, 'show'])->name('anamnesis.show');
+    Route::post('/anamnesis/{submission}', [ClientAnamnesisController::class, 'submit'])->name('anamnesis.submit');
     Route::get('/appointments', [ClientAppointmentController::class, 'index'])->name('appointments');
+    Route::get('/messages', [ClientMessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [ClientMessageController::class, 'store'])->name('messages.store');
     Route::get('/settings', [ClientAvatarController::class, 'index'])->name('settings');
     Route::post('/settings/avatar', [ClientAvatarController::class, 'update'])->name('settings.avatar.update');
     Route::delete('/settings/avatar', [ClientAvatarController::class, 'destroy'])->name('settings.avatar.delete');

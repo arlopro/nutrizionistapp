@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, Activity, Percent } from 'lucide-vue-next';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, Activity, Percent, MessageSquare, Pencil, Check, X } from 'lucide-vue-next';
 
 const props = defineProps<{
     checkIn: any;
@@ -18,6 +19,23 @@ function measurementLabel(type: string) {
 
 function ratingDots(value: number) {
     return value;
+}
+
+const editingPatientNotes = ref(false);
+const patientNotesDraft = ref(props.checkIn.patient_notes || '');
+
+function savePatientNotes() {
+    router.patch(route('client.check-ins.patient-notes', props.checkIn.id), {
+        patient_notes: patientNotesDraft.value || null,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => { editingPatientNotes.value = false; },
+    });
+}
+
+function cancelEditPatientNotes() {
+    patientNotesDraft.value = props.checkIn.patient_notes || '';
+    editingPatientNotes.value = false;
 }
 </script>
 
@@ -140,8 +158,50 @@ function ratingDots(value: number) {
 
             <!-- Feedback nutrizionista -->
             <div v-if="checkIn.nutritionist_notes" class="rounded-2xl bg-primary-50 border border-primary-100 shadow-sm p-6 mb-6">
-                <h2 class="text-base font-semibold text-primary-900 mb-2">Feedback del nutrizionista</h2>
+                <div class="flex items-center gap-2 mb-2">
+                    <MessageSquare class="h-5 w-5 text-primary-600" />
+                    <h2 class="text-base font-semibold text-primary-900">Feedback del nutrizionista</h2>
+                </div>
                 <p class="text-sm text-primary-800 whitespace-pre-line">{{ checkIn.nutritionist_notes }}</p>
+            </div>
+
+            <!-- Note paziente (editabili) -->
+            <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <Pencil class="h-5 w-5 text-amber-500" />
+                        <h2 class="text-base font-semibold text-gray-900">Le mie annotazioni</h2>
+                    </div>
+                    <button
+                        v-if="!editingPatientNotes"
+                        @click="editingPatientNotes = true"
+                        class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-50 transition"
+                    >
+                        <Pencil class="h-3 w-3" /> {{ checkIn.patient_notes ? 'Modifica' : 'Aggiungi' }}
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mb-2">Sintomi, aderenza al piano, osservazioni per il nutrizionista.</p>
+
+                <div v-if="editingPatientNotes">
+                    <textarea
+                        v-model="patientNotesDraft"
+                        rows="4"
+                        placeholder="Es: Ho avuto mal di stomaco martedì, ho sostituito il latte con quello di soia. Aderenza al piano ~80%."
+                        class="w-full rounded-lg border-gray-200 text-sm focus:border-amber-400 focus:ring-amber-400 resize-none"
+                    ></textarea>
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button @click="cancelEditPatientNotes" class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 transition">
+                            <X class="h-3 w-3" /> Annulla
+                        </button>
+                        <button @click="savePatientNotes" class="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600 transition">
+                            <Check class="h-3 w-3" /> Salva
+                        </button>
+                    </div>
+                </div>
+                <div v-else>
+                    <p v-if="checkIn.patient_notes" class="text-sm text-gray-600 whitespace-pre-line">{{ checkIn.patient_notes }}</p>
+                    <p v-else class="text-sm text-gray-400 italic">Nessuna annotazione. Clicca "Aggiungi" per scrivere.</p>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>

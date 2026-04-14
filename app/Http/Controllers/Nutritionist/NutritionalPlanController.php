@@ -8,6 +8,7 @@ use App\Enums\Gender;
 use App\Enums\MealType;
 use App\Enums\PlanStatus;
 use App\Http\Controllers\Controller;
+use App\Mail\PlanDelivered;
 use App\Models\ClientProfile;
 use App\Models\Food;
 use App\Models\NutritionalPlan;
@@ -15,6 +16,7 @@ use App\Models\Recipe;
 use App\Services\TdeeCalculator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -125,7 +127,7 @@ class NutritionalPlanController extends Controller
             $template = NutritionalPlan::where('id', $validated['template_id'])
                 ->where('nutritionist_id', $request->user()->id)
                 ->where('is_template', true)
-                ->with('meals.items')
+                ->with(['meals.items', 'supplements'])
                 ->firstOrFail();
 
             foreach ($template->meals as $meal) {
@@ -146,7 +148,11 @@ class NutritionalPlanController extends Controller
                     ]);
                 }
             }
+
+            $this->copySupplements($template, $plan);
         }
+
+        $this->sendPlanDeliveredEmail($plan, $client);
 
         return redirect()->route('nutritionist.plans.show', $plan)
             ->with('success', 'Piano creato. Ora puoi aggiungere i pasti.');
@@ -162,11 +168,12 @@ class NutritionalPlanController extends Controller
             'meals.items.recipe.ingredients.food',
             'meals.items.alternatives.food',
             'meals.items.alternatives.recipe',
+            'supplements',
         ]);
 
         $foods = Food::forNutritionist($request->user()->id)
             ->orderBy('name')
-            ->get(['id', 'name', 'category', 'calories_per_100g', 'protein_per_100g', 'carbs_per_100g', 'fat_per_100g']);
+            ->get(['id', 'name', 'category', 'calories_per_100g', 'protein_per_100g', 'carbs_per_100g', 'fat_per_100g', 'fiber_per_100g', 'sodium_mg', 'potassium_mg', 'calcium_mg', 'iron_mg', 'vitamin_d_mcg', 'vitamin_b12_mcg', 'glycemic_index']);
 
         $recipes = Recipe::where('nutritionist_id', $request->user()->id)
             ->with('ingredients.food')
@@ -223,7 +230,15 @@ class NutritionalPlanController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $oldStatus = $plan->status;
         $plan->update($validated);
+
+        if ($oldStatus !== 'active' && $validated['status'] === 'active') {
+            $client = $plan->client;
+            if ($client) {
+                $this->sendPlanDeliveredEmail($plan, $client);
+            }
+        }
 
         return redirect()->route('nutritionist.plans.show', $plan)
             ->with('success', 'Piano aggiornato.');
@@ -233,7 +248,7 @@ class NutritionalPlanController extends Controller
     {
         $this->authorizePlan($plan);
 
-        $plan->load('meals.items');
+        $plan->load(['meals.items', 'supplements']);
 
         $newPlan = NutritionalPlan::create([
             'client_id' => $plan->client_id,
@@ -251,6 +266,7 @@ class NutritionalPlanController extends Controller
         ]);
 
         $this->copyMeals($plan, $newPlan);
+        $this->copySupplements($plan, $newPlan);
 
         return redirect()->route('nutritionist.plans.show', $newPlan)
             ->with('success', 'Piano duplicato.');
@@ -267,7 +283,7 @@ class NutritionalPlanController extends Controller
             'template_name' => 'required|string|max:255',
         ]);
 
-        $plan->load('meals.items');
+        $plan->load(['meals.items', 'supplements']);
 
         $template = NutritionalPlan::create([
             'nutritionist_id' => $plan->nutritionist_id,
@@ -286,6 +302,7 @@ class NutritionalPlanController extends Controller
         ]);
 
         $this->copyMeals($plan, $template);
+        $this->copySupplements($plan, $template);
 
         return back()->with('success', "Template \"{$validated['template_name']}\" salvato.");
     }
@@ -323,7 +340,7 @@ class NutritionalPlanController extends Controller
     {
         $this->authorizePlan($plan);
 
-        $plan->load(['client.user', 'meals' => fn ($q) => $q->orderBy('day_of_week')->orderBy('sort_order'), 'meals.items.food', 'meals.items.recipe.ingredients.food']);
+        $plan->load(['client.user', 'meals' => fn ($q) => $q->orderBy('day_of_week')->orderBy('sort_order'), 'meals.items.food', 'meals.items.recipe.ingredients.food', 'supplements']);
 
         $nutritionist = auth()->user();
         $profile = $nutritionist->nutritionistProfile;
@@ -375,6 +392,38 @@ class NutritionalPlanController extends Controller
                     'sort_order' => $item->sort_order,
                 ]);
             }
+        }
+    }
+
+    private function copySupplements(NutritionalPlan $source, NutritionalPlan $dest): void
+    {
+        foreach ($source->supplements as $supplement) {
+            $dest->supplements()->create([
+                'name' => $supplement->name,
+                'dosage' => $supplement->dosage,
+                'dosage_unit' => $supplement->dosage_unit,
+                'timing' => $supplement->timing,
+                'duration' => $supplement->duration,
+                'notes' => $supplement->notes,
+                'sort_order' => $supplement->sort_order,
+            ]);
+        }
+    }
+
+    private function sendPlanDeliveredEmail(NutritionalPlan $plan, ClientProfile $client): void
+    {
+        $nutritionist = $plan->nutritionist ?? auth()->user();
+        $profile = $nutritionist?->nutritionistProfile;
+        $settings = $profile ? $profile->mergedNotificationSettings() : ['plan_delivered' => true];
+
+        if (! $settings['plan_delivered']) {
+            return;
+        }
+
+        $clientEmail = $client->user?->email;
+        if ($clientEmail) {
+            $plan->loadMissing('client.user', 'client.nutritionist');
+            Mail::to($clientEmail)->queue(new PlanDelivered($plan));
         }
     }
 

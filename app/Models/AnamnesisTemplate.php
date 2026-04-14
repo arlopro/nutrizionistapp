@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['nutritionist_id', 'name', 'description', 'is_default', 'questions'])]
 class AnamnesisTemplate extends Model
@@ -27,5 +28,10 @@ class AnamnesisTemplate extends Model
     public function nutritionist(): BelongsTo
     {
         return $this->belongsTo(User::class, 'nutritionist_id');
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(AnamnesisSubmission::class, 'anamnesis_template_id');
     }
 }

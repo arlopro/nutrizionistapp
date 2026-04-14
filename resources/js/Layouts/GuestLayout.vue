@@ -12,7 +12,7 @@ import { Link } from '@inertiajs/vue3';
                 <div class="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
             </div>
             <div class="relative z-10 text-center px-12">
-                <ApplicationLogo class="mx-auto h-20 w-20 mb-8" />
+                <ApplicationLogo class="mx-auto h-20 w-20 mb-8 drop-shadow-lg" />
                 <h1 class="text-4xl font-bold text-white mb-4">NutrizionistApp</h1>
                 <p class="text-primary-100 text-lg max-w-md">
                     La piattaforma per nutrizionisti per gestire clienti, piani alimentari e appuntamenti.
@@ -23,11 +23,8 @@ import { Link } from '@inertiajs/vue3';
         <!-- Right side: form -->
         <div class="flex w-full lg:w-1/2 flex-col items-center justify-center bg-gray-50 px-6 py-12">
             <div class="lg:hidden mb-8 text-center">
-                <Link href="/" class="inline-flex items-center gap-3">
-                    <ApplicationLogo class="h-12 w-12" />
-                    <span class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
-                        NutrizionistApp
-                    </span>
+                <Link href="/">
+                    <img src="/images/logo-nutrizionistapp.png" alt="NutrizionistApp" class="h-10 w-auto mx-auto" />
                 </Link>
             </div>
 

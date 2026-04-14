@@ -51,4 +51,9 @@ class NutritionalPlan extends Model
     {
         return $this->hasMany(PlanMeal::class, 'nutritional_plan_id')->orderBy('day_of_week')->orderBy('sort_order');
     }
+
+    public function supplements(): HasMany
+    {
+        return $this->hasMany(PlanSupplement::class, 'nutritional_plan_id')->orderBy('sort_order');
+    }
 }
