@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import {
     ArrowLeft, Pencil, Trash2, Plus, Search, ChefHat,
     Flame, Beef, Wheat, Droplets, Calendar, User, X,
     Copy, FileText, LayoutList, ChevronsRight, BookTemplate, Download, GitBranch,
-    Pill, Clock, Timer,
+    Pill, Clock, Timer, Lock,
 } from 'lucide-vue-next';
+
+const page = usePage();
+const features = computed(() => (page.props.subscription as any)?.features ?? {});
+const hasPdfExport = computed(() => !!features.value.pdf_export);
+const templateLimit = computed<number | null>(() => features.value.plan_template_limit ?? null);
 
 const props = defineProps<{
     plan: any;
@@ -435,17 +440,28 @@ function deleteSupplement(supplementId: number) {
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <a
+                        v-if="hasPdfExport"
                         :href="route('nutritionist.plans.pdf', plan.id)"
                         target="_blank"
                         class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition"
                     >
                         <Download class="h-3.5 w-3.5" /> Esporta PDF
                     </a>
+                    <Link
+                        v-else
+                        :href="route('nutritionist.billing')"
+                        title="Disponibile dal piano Starter"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed opacity-70"
+                    >
+                        <Lock class="h-3.5 w-3.5" /> Esporta PDF
+                        <span class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">Starter+</span>
+                    </Link>
                     <button @click="duplicatePlan" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                         <Copy class="h-3.5 w-3.5" /> Duplica piano
                     </button>
                     <button @click="showSaveTemplate = true" class="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-50 transition">
                         <BookTemplate class="h-3.5 w-3.5" /> Salva template
+                        <span v-if="templateLimit !== null" class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">max {{ templateLimit }}</span>
                     </button>
                     <Link :href="route('nutritionist.plans.edit', plan.id)" class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                         <Pencil class="h-3.5 w-3.5" /> Modifica Info

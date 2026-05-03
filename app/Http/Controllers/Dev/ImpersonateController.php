@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Dev;
 
+use App\Events\ImpersonationStarted;
+use App\Events\ImpersonationStopped;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -12,14 +14,19 @@ class ImpersonateController extends Controller
 {
     public function impersonate(Request $request, User $user)
     {
-        // Salva l'ID originale in sessione (solo se non stiamo già impersonificando)
+        $admin = $request->user();
+
+        abort_if($user->hasRole('dev'), 403, 'Non puoi impersonare un altro account dev.');
+        abort_if($user->id === $admin->id, 403, 'Non puoi impersonare te stesso.');
+
         if (!Session::has('impersonating_original_id')) {
-            Session::put('impersonating_original_id', $request->user()->id);
+            Session::put('impersonating_original_id', $admin->id);
         }
+
+        ImpersonationStarted::dispatch($admin, $user);
 
         Auth::loginUsingId($user->id);
 
-        // Redirect in base al ruolo dell'utente impersonificato
         if ($user->hasRole('nutritionist')) {
             return redirect()->route('nutritionist.dashboard');
         }
@@ -35,6 +42,15 @@ class ImpersonateController extends Controller
         $originalId = Session::pull('impersonating_original_id');
 
         if ($originalId) {
+            $impersonated = Auth::user();
+            $admin = User::find($originalId);
+
+            if (!$admin || !$admin->hasRole('dev')) {
+                Auth::logout();
+                return redirect()->route('login');
+            }
+
+            ImpersonationStopped::dispatch($admin, $impersonated);
             Auth::loginUsingId($originalId);
         }
 

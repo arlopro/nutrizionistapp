@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LabResult extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $guarded = ['id'];
 

@@ -6,8 +6,12 @@ use App\Http\Controllers\Client\AppointmentController as ClientAppointmentContro
 use App\Http\Controllers\Client\CheckInController as ClientCheckInController;
 use App\Http\Controllers\Client\MealCompletionController as ClientMealCompletionController;
 use App\Http\Controllers\Client\PlanController as ClientPlanController;
+use App\Http\Controllers\Dev\ActivityController;
 use App\Http\Controllers\Dev\DevController;
 use App\Http\Controllers\Dev\ImpersonateController;
+use App\Http\Controllers\Dev\GiftController;
+use App\Http\Controllers\Dev\SettingsController as DevSettingsController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\Nutritionist\BillingController;
 use App\Http\Controllers\Nutritionist\ClientController;
 use App\Http\Controllers\Nutritionist\DashboardController as NutritionistDashboardController;
@@ -76,6 +80,7 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
     Route::get('check-ins', [NutritionistCheckInController::class, 'index'])->name('check-ins.index');
     Route::get('check-ins/{checkIn}', [NutritionistCheckInController::class, 'show'])->name('check-ins.show');
     Route::patch('check-ins/{checkIn}/notes', [NutritionistCheckInController::class, 'addNotes'])->name('check-ins.notes');
+    Route::patch('check-ins/{checkIn}/review', [NutritionistCheckInController::class, 'review'])->name('check-ins.review');
     Route::get('check-ins/photo-compare', [NutritionistCheckInController::class, 'photoCompare'])->name('check-ins.photo-compare');
 
     // Appointments
@@ -84,8 +89,8 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
     Route::put('appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
     Route::delete('appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
 
-    // PDF export
-    Route::get('plans/{plan}/pdf', [NutritionalPlanController::class, 'exportPdf'])->name('plans.pdf');
+    // PDF export (Starter+)
+    Route::get('plans/{plan}/pdf', [NutritionalPlanController::class, 'exportPdf'])->middleware('plan.feature:pdf_export')->name('plans.pdf');
 
     // Lab results (esami ematochimici)
     Route::resource('lab-results', LabResultController::class);
@@ -116,7 +121,9 @@ Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('
 
     // Billing / Subscription
     Route::get('billing', [BillingController::class, 'index'])->name('billing');
+    Route::get('billing/success', [BillingController::class, 'stripeSuccess'])->name('billing.stripe-success');
     Route::post('billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::post('billing/billing-info', [BillingController::class, 'updateBillingInfo'])->name('billing.info.update');
     Route::post('billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 });
 
@@ -149,9 +156,16 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:dev'])->prefix('dev')->name('dev.')->group(function () {
     Route::get('/', [DevController::class, 'dashboard'])->name('dashboard');
     Route::get('/nutritionists', [DevController::class, 'nutritionists'])->name('nutritionists');
+    Route::get('/nutritionists/{user}', [DevController::class, 'showNutritionist'])->name('nutritionists.show');
     Route::get('/plans', [DevController::class, 'plans'])->name('plans');
     Route::get('/users', [DevController::class, 'users'])->name('users');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::post('/impersonate/{user}', [ImpersonateController::class, 'impersonate'])->name('impersonate');
+    Route::get('/settings/payments', [DevSettingsController::class, 'payments'])->name('settings.payments');
+    Route::post('/settings/payments/{provider}', [DevSettingsController::class, 'update'])->name('settings.payments.update');
+    Route::post('/settings/payments/{provider}/test', [DevSettingsController::class, 'test'])->name('settings.payments.test');
+    Route::post('/nutritionists/{user}/gift', [GiftController::class, 'store'])->name('nutritionists.gift');
+    Route::delete('/nutritionists/{user}/gift/{gift}', [GiftController::class, 'destroy'])->name('nutritionists.gift.destroy');
 });
 
 // Stop impersonation (accessible to everyone with active impersonation)
@@ -159,5 +173,8 @@ Route::post('/impersonate/stop', [ImpersonateController::class, 'stop'])->middle
 
 // Cashier webhook
 Route::post('/stripe/webhook', [\Laravel\Cashier\Http\Controllers\WebhookController::class, 'handleWebhook'])->name('cashier.webhook');
+
+// PayPal webhook
+Route::post('/paypal/webhook', [PayPalWebhookController::class, 'handle'])->name('paypal.webhook');
 
 require __DIR__.'/auth.php';

@@ -6,6 +6,7 @@ use App\Models\ClientProfile;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -22,6 +23,7 @@ class CheckInReminder extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            from: new Address(config('mail.from_notifications.address'), config('mail.from_notifications.name')),
             subject: 'Promemoria: compila il tuo check-in settimanale',
         );
     }

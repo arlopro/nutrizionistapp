@@ -49,6 +49,10 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'mailgun' => [
+            'transport' => 'mailgun',
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -111,8 +115,23 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@nutrizionistapp.it'),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'NutrizionistApp')),
+    ],
+
+    'from_notifications' => [
+        'address' => env('MAIL_FROM_NOTIFICATIONS', 'notifiche@nutrizionistapp.it'),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'NutrizionistApp')),
+    ],
+
+    'from_support' => [
+        'address' => env('MAIL_FROM_SUPPORT', 'supporto@nutrizionistapp.it'),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'NutrizionistApp')),
+    ],
+
+    'from_errors' => [
+        'address' => env('MAIL_FROM_ERRORS', 'errori@nutrizionistapp.it'),
+        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'NutrizionistApp')),
     ],
 
 ];

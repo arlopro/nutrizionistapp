@@ -15,6 +15,7 @@ class NutritionistProfile extends Model
             'session_durations'       => 'array',
             'locations'               => 'array',
             'notification_settings'   => 'array',
+            'billing_info'            => 'array',
             'onboarding_completed_at' => 'datetime',
         ];
     }

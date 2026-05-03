@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ClientProfile;
 use App\Models\User;
 use App\Services\SubscriptionService;
+use App\Notifications\ClientInvitation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -105,9 +106,8 @@ class ClientController extends Controller
         );
 
         if (!empty($validated['send_invitation'])) {
-            Password::sendResetLink(['email' => $user->email]);
-            $user->update(['invitation_sent_at' => now()]);
-            $message = 'Cliente creato. Email di accesso inviata al cliente.';
+            $this->sendClientInvitation($user, $request->user());
+            $message = 'Cliente creato. Email di benvenuto inviata al cliente.';
         } else {
             $message = 'Cliente creato. Puoi inviare l\'invito di accesso dalla scheda cliente.';
         }
@@ -121,10 +121,16 @@ class ClientController extends Controller
         $this->authorizeClient($client);
 
         $client->load('user');
-        Password::sendResetLink(['email' => $client->user->email]);
-        $client->user->update(['invitation_sent_at' => now()]);
+        $this->sendClientInvitation($client->user, auth()->user());
 
-        return back()->with('success', 'Email di accesso inviata a ' . $client->user->email . '.');
+        return back()->with('success', 'Email di benvenuto inviata a ' . $client->user->email . '.');
+    }
+
+    private function sendClientInvitation(\App\Models\User $client, \App\Models\User $nutritionist): void
+    {
+        $token = Password::broker()->createToken($client);
+        $client->notify(new ClientInvitation($token, $nutritionist));
+        $client->update(['invitation_sent_at' => now()]);
     }
 
     public function show(ClientProfile $client)

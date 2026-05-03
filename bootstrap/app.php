@@ -20,12 +20,32 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'plan.feature' => \App\Http\Middleware\EnsurePlanFeature::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',
+            'paypal/webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->report(function (\Throwable $e) {
+            $isProduction = app()->environment('production');
+            $isMailEnabled = (bool) env('LOG_ERRORS_VIA_MAIL', false);
+
+            if (($isProduction || $isMailEnabled) && app()->bound('mailer')) {
+                \Illuminate\Support\Facades\RateLimiter::attempt(
+                    'error-mail:' . md5(get_class($e) . $e->getMessage()),
+                    5,
+                    function () use ($e) {
+                        try {
+                            \Illuminate\Support\Facades\Mail::to('info@davidearlotti.it')
+                                ->send(new \App\Mail\ServerErrorReport($e, request()));
+                        } catch (\Throwable) {
+                            // never let error reporting throw
+                        }
+                    }
+                );
+            }
+        });
     })->create();

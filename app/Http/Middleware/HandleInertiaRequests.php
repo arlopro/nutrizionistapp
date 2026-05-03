@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +29,10 @@ class HandleInertiaRequests extends Middleware
                     'avatarUrl' => $user->avatar ? Storage::disk('public')->url($user->avatar) : null,
                 ]) : null,
             ],
+            'subscription' => $user && $user->hasRole('nutritionist') ? [
+                'plan'     => SubscriptionService::currentPlan($user),
+                'features' => SubscriptionService::FEATURES[SubscriptionService::currentPlan($user)],
+            ] : null,
             'impersonating' => Session::has('impersonating_original_id'),
             'flash' => [
                 'success' => Session::get('success'),

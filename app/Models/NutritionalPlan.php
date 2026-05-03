@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Enums\PlanStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class NutritionalPlan extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $guarded = ['id'];
 

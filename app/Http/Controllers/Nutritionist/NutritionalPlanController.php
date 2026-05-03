@@ -9,6 +9,7 @@ use App\Enums\MealType;
 use App\Enums\PlanStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\PlanDelivered;
+use App\Services\SubscriptionService;
 use App\Models\ClientProfile;
 use App\Models\Food;
 use App\Models\NutritionalPlan;
@@ -279,6 +280,11 @@ class NutritionalPlanController extends Controller
     {
         $this->authorizePlan($plan);
 
+        if (!SubscriptionService::canCreateTemplate($request->user())) {
+            $limit = SubscriptionService::featureLimit($request->user(), 'plan_template_limit');
+            return back()->with('error', "Hai raggiunto il limite di {$limit} template del piano Free. Passa al piano Starter per template illimitati.");
+        }
+
         $validated = $request->validate([
             'template_name' => 'required|string|max:255',
         ]);
@@ -346,7 +352,7 @@ class NutritionalPlanController extends Controller
         $profile = $nutritionist->nutritionistProfile;
 
         $logoBase64 = null;
-        if ($profile?->logo && Storage::disk('public')->exists($profile->logo)) {
+        if ($profile?->logo && Storage::disk('public')->exists($profile->logo) && SubscriptionService::hasFeature($nutritionist, 'custom_pdf_logo')) {
             $logoContent = Storage::disk('public')->get($profile->logo);
             $mimeType = Storage::disk('public')->mimeType($profile->logo);
             $logoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);

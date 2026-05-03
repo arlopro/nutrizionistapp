@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DevLayout from '@/Layouts/DevLayout.vue';
-import { router } from '@inertiajs/vue3';
-import { Users, UtensilsCrossed, CalendarDays, UserCog } from 'lucide-vue-next';
+import { Link, router } from '@inertiajs/vue3';
+import { Users, UtensilsCrossed, CalendarDays, UserCog, ExternalLink } from 'lucide-vue-next';
 
 defineProps<{
     nutritionists: {
@@ -42,7 +42,8 @@ function formatDate(d: string) {
                             <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pazienti</th>
                             <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Piani</th>
                             <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Appuntamenti</th>
-                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Registrato</th>
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Piano</th>
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">Ultimo login</th>
                             <th class="px-4 py-3" />
                         </tr>
                     </thead>
@@ -69,15 +70,30 @@ function formatDate(d: string) {
                             </td>
                             <td class="px-4 py-4 text-center text-gray-300 hidden lg:table-cell">{{ n.plans_count }}</td>
                             <td class="px-4 py-4 text-center text-gray-300 hidden lg:table-cell">{{ n.appointments_count }}</td>
-                            <td class="px-4 py-4 text-gray-500 text-xs hidden xl:table-cell">{{ formatDate(n.created_at) }}</td>
+                            <td class="px-4 py-4 hidden xl:table-cell">
+                                <span :class="['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold', n.plan === 'free' ? 'bg-gray-700 text-gray-300' : n.plan === 'starter' ? 'bg-blue-900/40 text-blue-300' : n.plan === 'pro' ? 'bg-emerald-900/40 text-emerald-300' : 'bg-violet-900/40 text-violet-300']">
+                                    {{ n.plan?.toUpperCase() }}
+                                </span>
+                                <span v-if="n.subscription_status && n.subscription_status !== 'active'" class="ml-1 text-xs text-orange-400">{{ n.subscription_status }}</span>
+                            </td>
+                            <td class="px-4 py-4 text-gray-500 text-xs hidden xl:table-cell">{{ n.last_login_at ? formatDate(n.last_login_at) : '—' }}</td>
                             <td class="px-4 py-4">
-                                <button
-                                    @click="impersonate(n.id)"
-                                    class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600/20 border border-violet-500/30 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-600/30 transition whitespace-nowrap"
-                                >
-                                    <UserCog class="h-3.5 w-3.5" />
-                                    Impersona
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <Link
+                                        :href="route('dev.nutritionists.show', n.id)"
+                                        class="inline-flex items-center gap-1 rounded-lg bg-gray-700/50 border border-gray-600 px-2.5 py-1.5 text-xs font-medium text-gray-300 hover:bg-gray-700 transition"
+                                    >
+                                        <ExternalLink class="h-3 w-3" />
+                                        Dettagli
+                                    </Link>
+                                    <button
+                                        @click="impersonate(n.id)"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600/20 border border-violet-500/30 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-600/30 transition whitespace-nowrap"
+                                    >
+                                        <UserCog class="h-3.5 w-3.5" />
+                                        Impersona
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="!nutritionists.data.length">

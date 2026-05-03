@@ -13,7 +13,11 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^7.2",
+        "srmklive/paypal": "^3.0",
+        "symfony/http-client": "^8.0",
+        "symfony/mailgun-mailer": "^8.0",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

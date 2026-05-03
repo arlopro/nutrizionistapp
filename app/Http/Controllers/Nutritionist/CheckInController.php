@@ -90,11 +90,25 @@ class CheckInController extends Controller
         $this->authorize('update', $checkIn);
 
         $validated = $request->validate([
-            'nutritionist_notes' => 'required|string',
+            'nutritionist_notes' => 'nullable|string',
         ]);
 
         $checkIn->update($validated);
 
         return back()->with('success', 'Note salvate.');
+    }
+
+    public function review(Request $request, CheckIn $checkIn)
+    {
+        $checkIn->load('client');
+        $this->authorize('update', $checkIn);
+
+        $validated = $request->validate([
+            'nutritionist_notes' => 'nullable|string',
+        ]);
+
+        $checkIn->update(array_merge($validated, ['reviewed_at' => now()]));
+
+        return back()->with('success', 'Monitoraggio segnato come revisionato.');
     }
 }

@@ -8,7 +8,7 @@ import {
     Chart as ChartJS, CategoryScale, LinearScale, PointElement,
     LineElement, Tooltip, Filler,
 } from 'chart.js';
-import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, User, TrendingDown, TrendingUp, Minus, Activity, Percent, ImageIcon } from 'lucide-vue-next';
+import { ArrowLeft, Scale, Droplets, Smile, Zap, Moon, User, TrendingDown, TrendingUp, Minus, Activity, Percent, ImageIcon, CheckCircle } from 'lucide-vue-next';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
@@ -33,6 +33,12 @@ const notesForm = useForm({
 
 function submitNotes() {
     notesForm.patch(route('nutritionist.check-ins.notes', props.checkIn.id), {
+        preserveScroll: true,
+    });
+}
+
+function submitReview() {
+    notesForm.patch(route('nutritionist.check-ins.review', props.checkIn.id), {
         preserveScroll: true,
     });
 }
@@ -315,18 +321,32 @@ const bodyCompChartOptions = {
 
             <!-- Feedback nutrizionista -->
             <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 mb-6">
-                <h2 class="text-base font-semibold text-gray-900 mb-3">Il tuo feedback</h2>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-semibold text-gray-900">Il tuo feedback</h2>
+                    <span v-if="checkIn.reviewed_at" class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                        <CheckCircle class="h-3.5 w-3.5" />
+                        Revisionato {{ new Date(checkIn.reviewed_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) }}
+                    </span>
+                </div>
                 <form @submit.prevent="submitNotes">
                     <textarea
                         v-model="notesForm.nutritionist_notes"
                         rows="4"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
-                        placeholder="Scrivi un commento o consiglio per il cliente..."
+                        placeholder="Scrivi un commento o consiglio per il cliente... (opzionale)"
                     ></textarea>
-                    <div class="mt-3">
-                        <PrimaryButton :class="{ 'opacity-25': notesForm.processing }" :disabled="notesForm.processing">
-                            Salva Feedback
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <PrimaryButton type="button" @click="submitReview" :class="{ 'opacity-25': notesForm.processing }" :disabled="notesForm.processing">
+                            <CheckCircle class="h-4 w-4 mr-1.5" />
+                            {{ checkIn.reviewed_at ? 'Ri-segna come revisionato' : 'Segna come revisionato' }}
                         </PrimaryButton>
+                        <button
+                            type="submit"
+                            :disabled="notesForm.processing"
+                            class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-25 transition"
+                        >
+                            Salva feedback
+                        </button>
                     </div>
                 </form>
             </div>

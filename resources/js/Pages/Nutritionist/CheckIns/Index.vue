@@ -68,7 +68,7 @@ function formatDate(d: string) {
                         </div>
                     </div>
                     <div>
-                        <span v-if="!checkIn.nutritionist_notes" class="rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">Da revisionare</span>
+                        <span v-if="!checkIn.reviewed_at" class="rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">Da revisionare</span>
                         <span v-else class="rounded-full bg-green-50 text-green-700 px-2 py-0.5 text-xs font-medium">Revisionato</span>
                     </div>
                 </div>

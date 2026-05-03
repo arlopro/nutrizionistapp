@@ -2,10 +2,68 @@
 
 namespace App\Services;
 
+use App\Models\GiftedPlan;
+use App\Models\PaypalSubscription;
 use App\Models\User;
 
 class SubscriptionService
 {
+    const FEATURES = [
+        'free' => [
+            'client_limit'        => 5,
+            'plan_template_limit' => 2,
+            'pdf_export'          => false,
+            'advanced_tracking'   => false,
+            'advanced_stats'      => false,
+            'custom_pdf_logo'     => false,
+        ],
+        'starter' => [
+            'client_limit'        => 20,
+            'plan_template_limit' => null,
+            'pdf_export'          => true,
+            'advanced_tracking'   => false,
+            'advanced_stats'      => false,
+            'custom_pdf_logo'     => true,
+        ],
+        'pro' => [
+            'client_limit'        => 100,
+            'plan_template_limit' => null,
+            'pdf_export'          => true,
+            'advanced_tracking'   => true,
+            'advanced_stats'      => true,
+            'custom_pdf_logo'     => true,
+        ],
+        'business' => [
+            'client_limit'        => null,
+            'plan_template_limit' => null,
+            'pdf_export'          => true,
+            'advanced_tracking'   => true,
+            'advanced_stats'      => true,
+            'custom_pdf_logo'     => true,
+        ],
+    ];
+
+    public static function hasFeature(User $user, string $key): bool
+    {
+        $plan = self::currentPlan($user);
+        return (bool) (self::FEATURES[$plan][$key] ?? false);
+    }
+
+    public static function featureLimit(User $user, string $key): ?int
+    {
+        $plan = self::currentPlan($user);
+        return self::FEATURES[$plan][$key] ?? null;
+    }
+
+    public static function canCreateTemplate(User $user): bool
+    {
+        $limit = self::featureLimit($user, 'plan_template_limit');
+        if ($limit === null) return true;
+
+        $count = $user->plans()->where('is_template', true)->count();
+        return $count < $limit;
+    }
+
     /**
      * Definizione dei piani con limiti e prezzi Stripe.
      */
@@ -67,10 +125,19 @@ class SubscriptionService
     }
 
     /**
-     * Restituisce il piano corrente dell'utente.
+     * Restituisce il piano corrente dell'utente (gift > Stripe > PayPal > free).
      */
     public static function currentPlan(User $user): string
     {
+        $gift = GiftedPlan::where('user_id', $user->id)
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->orderByDesc('created_at')
+            ->first();
+
+        if ($gift) {
+            return $gift->plan_key;
+        }
+
         if ($user->subscribed('default')) {
             foreach (['business', 'pro', 'starter'] as $plan) {
                 $priceId = config("cashier.price_{$plan}");
@@ -79,6 +146,16 @@ class SubscriptionService
                 }
             }
         }
+
+        $paypalSub = PaypalSubscription::where('user_id', $user->id)
+            ->where('status', 'ACTIVE')
+            ->latest()
+            ->first();
+
+        if ($paypalSub) {
+            return $paypalSub->plan_key;
+        }
+
         return 'free';
     }
 

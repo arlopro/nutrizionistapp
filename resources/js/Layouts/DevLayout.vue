@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import {
     LayoutDashboard, Users, UtensilsCrossed, UserCog,
-    LogOut, Menu, X, ChevronDown, Terminal, ShieldAlert,
+    LogOut, Menu, X, ChevronDown, Terminal, ShieldAlert, Activity, Settings,
 } from 'lucide-vue-next';
 
 const page = usePage();
@@ -18,6 +18,8 @@ const nav = [
     { name: 'Nutrizionisti', href: 'dev.nutritionists', icon: Users },
     { name: 'Piani', href: 'dev.plans', icon: UtensilsCrossed },
     { name: 'Utenti', href: 'dev.users', icon: UserCog },
+    { name: 'Activity Log', href: 'dev.activity', icon: Activity },
+    { name: 'Impostazioni', href: 'dev.settings.payments', icon: Settings },
 ];
 
 function isActive(name: string) {

@@ -6,11 +6,13 @@ use App\Enums\AppointmentStatus;
 use App\Enums\AppointmentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Appointment extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $guarded = ['id'];
 

@@ -13,6 +13,11 @@ const props = defineProps<{
 const search = ref(props.filters.search || '');
 const category = ref(props.filters.category || '');
 
+function confirmDelete(name: string, id: number) {
+    if (!confirm('Eliminare ' + name + '?')) return;
+    router.delete(route('nutritionist.foods.destroy', id));
+}
+
 let debounceTimer: any;
 watch([search, category], () => {
     clearTimeout(debounceTimer);
@@ -133,7 +138,7 @@ function categoryLabel(c: string) {
                                 </Link>
                                 <button
                                     type="button"
-                                    @click="() => { if (confirm('Eliminare ' + food.name + '?')) router.delete(route('nutritionist.foods.destroy', food.id)) }"
+                                    @click="confirmDelete(food.name, food.id)"
                                     class="p-1.5 text-gray-400 hover:text-red-500 transition rounded"
                                     title="Elimina"
                                 >
