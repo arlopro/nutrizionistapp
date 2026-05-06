@@ -114,8 +114,8 @@ const textareaClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm fo
                             <InputError :message="form.errors.last_name" class="mt-1" />
                         </div>
                         <div>
-                            <InputLabel for="email" value="Email *" />
-                            <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" required />
+                            <InputLabel for="email" :value="form.send_invitation ? 'Email *' : 'Email'" />
+                            <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" :required="form.send_invitation" />
                             <InputError :message="form.errors.email" class="mt-1" />
                         </div>
                         <div>

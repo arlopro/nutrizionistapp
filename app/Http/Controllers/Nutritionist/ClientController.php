@@ -55,7 +55,10 @@ class ClientController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => [
+                'nullable', 'email', 'unique:users,email',
+                $request->boolean('send_invitation') ? 'required' : 'nullable',
+            ],
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|string',
@@ -89,7 +92,7 @@ class ClientController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'] ?? null,
-            'email' => $validated['email'],
+            'email' => $validated['email'] ?? null,
             'phone' => $validated['phone'] ?? null,
             'password' => Hash::make(Str::random(32)),
         ]);
@@ -177,7 +180,7 @@ class ClientController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $client->user_id,
+            'email' => 'nullable|email|unique:users,email,' . $client->user_id,
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|string',
@@ -203,7 +206,7 @@ class ClientController extends Controller
         $client->user->update([
             'name' => $validated['name'],
             'last_name' => $validated['last_name'] ?? null,
-            'email' => $validated['email'],
+            'email' => $validated['email'] ?? null,
             'phone' => $validated['phone'] ?? null,
         ]);
 
