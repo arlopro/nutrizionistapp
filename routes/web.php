@@ -47,7 +47,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Nutritionist routes
-Route::middleware(['auth', 'role:nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
     Route::get('/dashboard', [NutritionistDashboardController::class, 'index'])->name('dashboard');
     Route::resource('clients', ClientController::class);
     Route::post('clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])->name('clients.send-invitation');
