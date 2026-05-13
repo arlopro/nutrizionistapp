@@ -12,7 +12,7 @@ class FoodController extends Controller
 {
     public function index(Request $request)
     {
-        $foods = Food::forNutritionist($request->user()->id)
+        $foods = Food::visibleTo($request->user()->id)
             ->when($request->search, function ($q, $search) {
                 $q->where('name', 'like', "%{$search}%");
             })
@@ -107,10 +107,33 @@ class FoodController extends Controller
     public function destroy(Food $food)
     {
         $this->authorizeFood($food);
+
+        $nutritionistId = request()->user()->id;
+        if ($food->isUsedByNutritionist($nutritionistId)) {
+            return redirect()->route('nutritionist.foods.index')
+                ->with('error', 'Impossibile archiviare: questo alimento è utilizzato in uno o più piani nutrizionali.');
+        }
+
         $food->delete();
 
         return redirect()->route('nutritionist.foods.index')
-            ->with('success', 'Alimento eliminato.');
+            ->with('success', 'Alimento archiviato.');
+    }
+
+    public function hide(Food $food)
+    {
+        $this->authorize('hide', $food);
+
+        $user = request()->user();
+        if ($food->isUsedByNutritionist($user->id)) {
+            return redirect()->route('nutritionist.foods.index')
+                ->with('error', 'Impossibile nascondere: questo alimento è utilizzato in uno o più piani nutrizionali.');
+        }
+
+        $food->hiddenByUsers()->syncWithoutDetaching([$user->id => ['created_at' => now()]]);
+
+        return redirect()->route('nutritionist.foods.index')
+            ->with('success', 'Alimento nascosto dalla tua libreria.');
     }
 
     private function authorizeFood(Food $food): void

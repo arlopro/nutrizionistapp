@@ -100,6 +100,22 @@ const textareaClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm fo
 
             <!-- Tab: Dati base -->
             <div v-show="activeTab === 'base'" class="space-y-6">
+                <!-- Accesso cliente — mostrato prima dell'anagrafica -->
+                <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+                    <h2 class="text-base font-semibold text-gray-900 mb-1">Accesso cliente</h2>
+                    <p class="text-sm text-gray-400 mb-4">
+                        L'invio dell'invito è facoltativo. Se non spunti questa casella, puoi creare il cliente senza email —
+                        utile se gestisci il suo percorso senza un account dedicato. Potrai sempre inviare l'invito in seguito dalla scheda cliente.
+                    </p>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input v-model="form.send_invitation" type="checkbox" class="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                        <span class="text-sm text-gray-700">
+                            <span class="font-medium">Invia invito via email</span><br />
+                            <span class="text-gray-400 text-xs">Il cliente riceverà un link per impostare la password e accedere all'area personale.</span>
+                        </span>
+                    </label>
+                </div>
+
                 <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
                     <h2 class="text-base font-semibold text-gray-900 mb-4">Anagrafica</h2>
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -116,6 +132,7 @@ const textareaClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm fo
                         <div>
                             <InputLabel for="email" :value="form.send_invitation ? 'Email *' : 'Email'" />
                             <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" :required="form.send_invitation" />
+                            <p v-if="!form.send_invitation" class="mt-1 text-xs text-gray-400">L'email non è obbligatoria se non vuoi creare l'account cliente.</p>
                             <InputError :message="form.errors.email" class="mt-1" />
                         </div>
                         <div>
@@ -136,19 +153,6 @@ const textareaClass = 'mt-1 block w-full rounded-md border-gray-300 shadow-sm fo
                             </select>
                         </div>
                     </div>
-                </div>
-
-                <!-- Invito accesso -->
-                <div class="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-                    <h2 class="text-base font-semibold text-gray-900 mb-1">Accesso cliente</h2>
-                    <p class="text-sm text-gray-400 mb-4">Il cliente riceverà un'email per impostare la propria password e accedere all'area personale.</p>
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input v-model="form.send_invitation" type="checkbox" class="mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                        <span class="text-sm text-gray-700">
-                            <span class="font-medium">Invia invito via email</span><br />
-                            <span class="text-gray-400 text-xs">Se non lo invii ora, potrai farlo in seguito dalla scheda cliente.</span>
-                        </span>
-                    </label>
                 </div>
 
                 <p class="text-sm text-gray-400">

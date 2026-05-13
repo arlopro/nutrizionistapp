@@ -294,7 +294,7 @@ const invoicesOpen = ref(false);
                                         class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition"
                                         :class="colorClasses(key, 'button')">
                                         <ArrowUpCircle class="h-3.5 w-3.5" />
-                                        Stripe — {{ plans[key].name }}
+                                        Fai upgrade a {{ plans[key].name }}
                                     </button>
                                     <button v-if="paymentProviders.paypal"
                                         @click="checkout(key, 'paypal')"

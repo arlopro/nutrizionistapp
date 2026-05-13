@@ -21,12 +21,10 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Forgot Password" />
+        <Head title="Password dimenticata" />
 
         <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
+            Hai dimenticato la password? Inserisci la tua email e ti invieremo un link per reimpostarla.
         </div>
 
         <div
@@ -58,7 +56,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Email Password Reset Link
+                    Invia link di reset
                 </PrimaryButton>
             </div>
         </form>

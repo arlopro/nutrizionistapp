@@ -20,4 +20,9 @@ class FoodPolicy
     {
         return $food->nutritionist_id !== null && $food->nutritionist_id === $user->id;
     }
+
+    public function hide(User $user, Food $food): bool
+    {
+        return $food->nutritionist_id === null;
+    }
 }

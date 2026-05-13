@@ -5,9 +5,14 @@ namespace App\Models;
 use App\Enums\FoodCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\PlanMealItem;
 
 class Food extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'foods';
 
     protected $guarded = ['id'];
@@ -47,5 +52,29 @@ class Food extends Model
             $q->whereNull('nutritionist_id')
               ->orWhere('nutritionist_id', $nutritionistId);
         });
+    }
+
+    public function scopeVisibleTo($query, int $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->whereNull('nutritionist_id')
+              ->orWhere('nutritionist_id', $userId);
+        })->whereNotIn('id', function ($sub) use ($userId) {
+            $sub->select('food_id')
+                ->from('food_user_hidden')
+                ->where('user_id', $userId);
+        });
+    }
+
+    public function hiddenByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'food_user_hidden');
+    }
+
+    public function isUsedByNutritionist(int $nutritionistId): bool
+    {
+        return PlanMealItem::where('food_id', $this->id)
+            ->whereHas('planMeal.plan', fn ($q) => $q->where('nutritionist_id', $nutritionistId))
+            ->exists();
     }
 }

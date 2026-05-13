@@ -52,6 +52,7 @@ Route::middleware(['auth', 'verified', 'role:nutritionist'])->prefix('nutritioni
     Route::resource('clients', ClientController::class);
     Route::post('clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])->name('clients.send-invitation');
     Route::resource('foods', FoodController::class);
+    Route::post('foods/{food}/hide', [FoodController::class, 'hide'])->name('foods.hide');
     Route::resource('recipes', RecipeController::class);
     Route::post('plans/calculate-tdee', [NutritionalPlanController::class, 'calculateTdee'])->name('plans.calculate-tdee');
     Route::resource('plans', NutritionalPlanController::class);

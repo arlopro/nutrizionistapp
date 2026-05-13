@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { Plus, Search, Apple, Flame, Beef, Wheat, Droplets, Pencil, Trash2 } from 'lucide-vue-next';
+import { Plus, Search, Apple, Flame, Beef, Wheat, Droplets, Pencil, Trash2, EyeOff } from 'lucide-vue-next';
 
 const props = defineProps<{
     foods: any;
@@ -13,9 +13,14 @@ const props = defineProps<{
 const search = ref(props.filters.search || '');
 const category = ref(props.filters.category || '');
 
-function confirmDelete(name: string, id: number) {
-    if (!confirm('Eliminare ' + name + '?')) return;
+function confirmArchive(name: string, id: number) {
+    if (!confirm('Archiviare "' + name + '"? Non sarà più visibile nella libreria.')) return;
     router.delete(route('nutritionist.foods.destroy', id));
+}
+
+function confirmHide(name: string, id: number) {
+    if (!confirm('Nascondere "' + name + '" dalla tua libreria? Potrai ancora vederlo nei piani esistenti ma non comparirà più nelle ricerche.')) return;
+    router.post(route('nutritionist.foods.hide', id));
 }
 
 let debounceTimer: any;
@@ -128,6 +133,7 @@ function categoryLabel(c: string) {
                         <td class="px-4 py-3 text-center text-gray-600 hidden md:table-cell">{{ food.carbs_per_100g }}g</td>
                         <td class="px-4 py-3 text-center text-gray-600 hidden md:table-cell">{{ food.fat_per_100g }}g</td>
                         <td class="px-4 py-3 text-right">
+                            <!-- Alimento personale: modifica + archivia -->
                             <div v-if="food.nutritionist_id" class="inline-flex items-center gap-1">
                                 <Link
                                     :href="route('nutritionist.foods.edit', food.id)"
@@ -138,11 +144,22 @@ function categoryLabel(c: string) {
                                 </Link>
                                 <button
                                     type="button"
-                                    @click="confirmDelete(food.name, food.id)"
+                                    @click="confirmArchive(food.name, food.id)"
                                     class="p-1.5 text-gray-400 hover:text-red-500 transition rounded"
-                                    title="Elimina"
+                                    title="Archivia"
                                 >
                                     <Trash2 class="h-4 w-4" />
+                                </button>
+                            </div>
+                            <!-- Alimento globale: nascondi -->
+                            <div v-else class="inline-flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    @click="confirmHide(food.name, food.id)"
+                                    class="p-1.5 text-gray-400 hover:text-amber-500 transition rounded"
+                                    title="Nascondi dalla libreria"
+                                >
+                                    <EyeOff class="h-4 w-4" />
                                 </button>
                             </div>
                         </td>
