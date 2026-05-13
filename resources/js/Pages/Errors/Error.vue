@@ -29,7 +29,7 @@ const homeRoute = computed(() => {
     if (roles.includes('dev')) return route('dev.dashboard');
     if (roles.includes('nutritionist')) return route('nutritionist.dashboard');
     if (roles.includes('client')) return route('client.dashboard');
-    return route('welcome');
+    return '/';
 });
 </script>
 
