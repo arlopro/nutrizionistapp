@@ -74,7 +74,7 @@ class Food extends Model
     public function isUsedByNutritionist(int $nutritionistId): bool
     {
         return PlanMealItem::where('food_id', $this->id)
-            ->whereHas('planMeal.plan', fn ($q) => $q->where('nutritionist_id', $nutritionistId))
+            ->whereHas('meal.plan', fn ($q) => $q->where('nutritionist_id', $nutritionistId))
             ->exists();
     }
 }
