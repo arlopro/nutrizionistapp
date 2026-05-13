@@ -262,13 +262,22 @@ interface PendingMove {
     timeLabel:   string;
 }
 
-const draggingApt    = ref<any>(null);
-const hoveredSlotId  = ref<string | null>(null);
-const pendingMove    = ref<PendingMove | null>(null);
-const confirmingMove = ref(false);
+const draggingApt       = ref<any>(null);
+const dragOffsetMinutes = ref(0);
+const hoveredSlotId     = ref<string | null>(null);
+const pendingMove       = ref<PendingMove | null>(null);
+const confirmingMove    = ref(false);
+
+function toLocalDateTimeStr(d: Date): string {
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 function onDragStart(e: DragEvent, apt: any) {
     draggingApt.value = apt;
+    // Memorizza quanti minuti dal bordo superiore dell'evento è stato afferrato,
+    // in modo da correggere il drop target e mostrare l'ora di inizio reale.
+    dragOffsetMinutes.value = Math.round((e.offsetY / HOUR_HEIGHT) * 60 / 15) * 15;
     if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', String(apt.id));
@@ -295,14 +304,22 @@ function onSlotDrop(e: DragEvent, day: Date, slot: { hour: number; minute: numbe
     const apt = draggingApt.value;
     if (!apt) return;
 
-    const ds           = day.toISOString().slice(0, 10);
-    const newStartsAt  = `${ds}T${slot.timeStr}`;
+    // Correggi il punto di drop sottraendo l'offset di cattura (dove l'utente ha afferrato l'evento)
+    const rawMinutes     = slot.hour * 60 + slot.minute - dragOffsetMinutes.value;
+    const clampedMinutes = Math.max(0, Math.min(23 * 60 + 45, Math.round(rawMinutes / 15) * 15));
+    const startHour      = Math.floor(clampedMinutes / 60);
+    const startMin       = clampedMinutes % 60;
+    const p              = (n: number) => String(n).padStart(2, '0');
+
+    const ds           = `${day.getFullYear()}-${p(day.getMonth() + 1)}-${p(day.getDate())}`;
+    const timeLabel    = `${p(startHour)}:${p(startMin)}`;
+    const newStartsAt  = `${ds}T${timeLabel}`;
     const origDuration = new Date(apt.ends_at).getTime() - new Date(apt.starts_at).getTime();
     const newEnd       = new Date(new Date(newStartsAt).getTime() + origDuration);
-    const newEndsAt    = newEnd.toISOString().slice(0, 16);
+    const newEndsAt    = toLocalDateTimeStr(newEnd);
     const dayLabel     = day.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'short' });
 
-    pendingMove.value   = { apt, newStartsAt, newEndsAt, dayLabel, timeLabel: slot.timeStr };
+    pendingMove.value   = { apt, newStartsAt, newEndsAt, dayLabel, timeLabel };
     draggingApt.value   = null;
     hoveredSlotId.value = null;
 }
