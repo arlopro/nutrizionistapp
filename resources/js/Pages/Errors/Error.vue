@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { AlertTriangle, Lock, ServerCrash, Clock, Zap, Wrench } from 'lucide-vue-next';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
-const props = defineProps<{ status: number }>();
-
-const page = usePage();
-const user = computed(() => (page.props as any).auth?.user);
+const props = defineProps<{ status: number; userRole?: string | null }>();
 
 const errors: Record<number, { icon: any; title: string; description: string }> = {
     403: { icon: Lock,         title: 'Accesso negato',      description: 'Non hai i permessi per visualizzare questa risorsa.' },
@@ -25,10 +22,9 @@ const current = computed(() => errors[props.status] ?? {
 });
 
 const homeRoute = computed(() => {
-    const roles: string[] = user.value?.roles ?? [];
-    if (roles.includes('dev')) return route('dev.dashboard');
-    if (roles.includes('nutritionist')) return route('nutritionist.dashboard');
-    if (roles.includes('client')) return route('client.dashboard');
+    if (props.userRole === 'dev') return route('dev.dashboard');
+    if (props.userRole === 'nutritionist') return route('nutritionist.dashboard');
+    if (props.userRole === 'client') return route('client.dashboard');
     return '/';
 });
 </script>

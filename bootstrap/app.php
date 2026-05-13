@@ -32,9 +32,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request) {
             $status = $response->getStatusCode();
             if (in_array($status, [403, 404, 419, 429, 500, 503], true) && !$request->expectsJson()) {
-                return \Inertia\Inertia::render('Errors/Error', ['status' => $status])
-                    ->toResponse($request)
-                    ->setStatusCode($status);
+                $user = $request->user();
+                $role = null;
+                if ($user) {
+                    if ($user->hasRole('dev')) $role = 'dev';
+                    elseif ($user->hasRole('nutritionist')) $role = 'nutritionist';
+                    elseif ($user->hasRole('client')) $role = 'client';
+                }
+                return \Inertia\Inertia::render('Errors/Error', [
+                    'status'   => $status,
+                    'userRole' => $role,
+                ])->toResponse($request)->setStatusCode($status);
             }
             return $response;
         });
