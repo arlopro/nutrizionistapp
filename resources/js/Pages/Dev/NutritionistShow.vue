@@ -3,6 +3,9 @@ import DevLayout from '@/Layouts/DevLayout.vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { ArrowLeft, UserCog, Users, UtensilsCrossed, CalendarDays, Activity, CreditCard, Gift, Trash2 } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 const props = defineProps<{
     nutritionist: any;
@@ -17,8 +20,12 @@ const flash = computed(() => (page.props as any).flash ?? {});
 
 const activeTab = ref<'plans' | 'appointments' | 'activity' | 'billing'>('plans');
 
-function impersonate() {
-    if (!confirm('Vuoi impersonificare questo nutrizionista?')) return;
+async function impersonate() {
+    const ok = await confirmDialog('Accederai all\'account di questo nutrizionista.', {
+        title: 'Impersona nutrizionista',
+        confirmLabel: 'Continua',
+    });
+    if (!ok) return;
     router.post(route('dev.impersonate', props.nutritionist.id));
 }
 
@@ -54,8 +61,13 @@ function submitGift() {
     });
 }
 
-function removeGift(giftId: number) {
-    if (!confirm('Rimuovere questo regalo?')) return;
+async function removeGift(giftId: number) {
+    const ok = await confirmDialog('Il regalo verrà rimosso e il piano tornerà a quello precedente.', {
+        title: 'Rimuovi regalo',
+        confirmLabel: 'Rimuovi',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('dev.nutritionists.gift.destroy', { user: props.nutritionist.id, gift: giftId }));
 }
 </script>

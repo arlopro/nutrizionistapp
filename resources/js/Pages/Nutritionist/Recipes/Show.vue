@@ -2,15 +2,22 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, Pencil, Trash2, Clock, Users, Flame, Beef, Wheat, Droplets } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 const props = defineProps<{
     recipe: any;
 }>();
 
-function deleteRecipe() {
-    if (confirm('Sei sicuro di voler eliminare questa ricetta?')) {
-        router.delete(route('nutritionist.recipes.destroy', props.recipe.id));
-    }
+async function deleteRecipe() {
+    const ok = await confirmDialog('La ricetta verrà eliminata definitivamente.', {
+        title: 'Elimina ricetta',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
+    router.delete(route('nutritionist.recipes.destroy', props.recipe.id));
 }
 </script>
 

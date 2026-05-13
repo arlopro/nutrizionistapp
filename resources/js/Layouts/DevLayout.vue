@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import {
     LayoutDashboard, Users, UtensilsCrossed, UserCog,
     LogOut, Menu, X, ChevronDown, Terminal, ShieldAlert, Activity, Settings,
@@ -121,4 +122,5 @@ function stopImpersonating() {
         <!-- Mobile overlay -->
         <div v-if="sidebarOpen" class="fixed inset-0 z-40 bg-black/60 lg:hidden" @click="sidebarOpen = false" />
     </div>
+    <ConfirmDialog />
 </template>

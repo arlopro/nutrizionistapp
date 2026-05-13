@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import {
     LayoutDashboard,
     Users,
@@ -271,4 +272,5 @@ function isActive(name: string): boolean {
             </main>
         </div>
     </div>
+    <ConfirmDialog />
 </template>

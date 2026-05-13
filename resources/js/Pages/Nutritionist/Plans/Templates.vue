@@ -2,13 +2,21 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { BookTemplate, Trash2, Flame, Beef, Wheat, Droplets, UtensilsCrossed, ArrowLeft } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 const props = defineProps<{
     templates: any[];
 }>();
 
-function deleteTemplate(id: number, name: string) {
-    if (!confirm(`Eliminare il template "${name}"?`)) return;
+async function deleteTemplate(id: number, name: string) {
+    const ok = await confirmDialog(`Il template "${name}" verrà eliminato definitivamente.`, {
+        title: 'Elimina template',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('nutritionist.plans.templates.destroy', id));
 }
 </script>

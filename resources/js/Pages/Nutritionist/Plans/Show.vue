@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 import {
     ArrowLeft, Pencil, Trash2, Plus, Search, ChefHat,
     Flame, Beef, Wheat, Droplets, Calendar, User, X,
@@ -195,8 +198,13 @@ function submitAddMeal() {
     });
 }
 
-function deleteMeal(mealId: number) {
-    if (!confirm('Eliminare questo pasto e tutti i suoi elementi?')) return;
+async function deleteMeal(mealId: number) {
+    const ok = await confirmDialog('Il pasto e tutti i suoi elementi verranno eliminati.', {
+        title: 'Elimina pasto',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('nutritionist.plans.meals.destroy', [props.plan.id, mealId]), {
         preserveScroll: true,
     });
@@ -254,10 +262,14 @@ function deleteItem(itemId: number) {
     });
 }
 
-function deletePlan() {
-    if (confirm('Sei sicuro di voler eliminare questo piano?')) {
-        router.delete(route('nutritionist.plans.destroy', props.plan.id));
-    }
+async function deletePlan() {
+    const ok = await confirmDialog('Il piano nutrizionale verrà eliminato definitivamente.', {
+        title: 'Elimina piano',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
+    router.delete(route('nutritionist.plans.destroy', props.plan.id));
 }
 
 function duplicatePlan() {
@@ -280,8 +292,12 @@ function submitDuplicateDay() {
     });
 }
 
-function applyDayToWeek() {
-    if (!confirm(`Applicare i pasti di ${days[activeDay.value].label} a tutti gli altri giorni? I pasti esistenti verranno sostituiti.`)) return;
+async function applyDayToWeek() {
+    const ok = await confirmDialog(`I pasti di ${days[activeDay.value].label} verranno copiati su tutti gli altri giorni, sostituendo quelli esistenti.`, {
+        title: 'Applica a tutta la settimana',
+        confirmLabel: 'Applica',
+    });
+    if (!ok) return;
     router.post(route('nutritionist.plans.days.apply-to-week', [props.plan.id, activeDay.value]), {}, {
         preserveScroll: true,
     });
@@ -404,8 +420,13 @@ function submitEditSupplement(supplementId: number) {
     });
 }
 
-function deleteSupplement(supplementId: number) {
-    if (!confirm('Eliminare questo integratore?')) return;
+async function deleteSupplement(supplementId: number) {
+    const ok = await confirmDialog('L\'integratore verrà rimosso dal piano.', {
+        title: 'Elimina integratore',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('nutritionist.plans.supplements.destroy', [props.plan.id, supplementId]), {
         preserveScroll: true,
     });

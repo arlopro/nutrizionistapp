@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { Plus, Search, Apple, Flame, Beef, Wheat, Droplets, Pencil, Trash2, EyeOff } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 const props = defineProps<{
     foods: any;
@@ -13,13 +16,22 @@ const props = defineProps<{
 const search = ref(props.filters.search || '');
 const category = ref(props.filters.category || '');
 
-function confirmArchive(name: string, id: number) {
-    if (!confirm('Archiviare "' + name + '"? Non sarà più visibile nella libreria.')) return;
+async function confirmArchive(name: string, id: number) {
+    const ok = await confirmDialog(`"${name}" non sarà più visibile nella libreria.`, {
+        title: 'Archivia alimento',
+        confirmLabel: 'Archivia',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('nutritionist.foods.destroy', id));
 }
 
-function confirmHide(name: string, id: number) {
-    if (!confirm('Nascondere "' + name + '" dalla tua libreria? Potrai ancora vederlo nei piani esistenti ma non comparirà più nelle ricerche.')) return;
+async function confirmHide(name: string, id: number) {
+    const ok = await confirmDialog(`"${name}" non comparirà più nelle ricerche. Potrai ancora vederlo nei piani esistenti.`, {
+        title: 'Nascondi alimento',
+        confirmLabel: 'Nascondi',
+    });
+    if (!ok) return;
     router.post(route('nutritionist.foods.hide', id));
 }
 

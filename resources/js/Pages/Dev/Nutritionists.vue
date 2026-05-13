@@ -2,6 +2,9 @@
 import DevLayout from '@/Layouts/DevLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { Users, UtensilsCrossed, CalendarDays, UserCog, ExternalLink } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 defineProps<{
     nutritionists: {
@@ -12,8 +15,12 @@ defineProps<{
     };
 }>();
 
-function impersonate(userId: number) {
-    if (!confirm('Vuoi impersonificare questo nutrizionista?')) return;
+async function impersonate(userId: number) {
+    const ok = await confirmDialog('Accederai all\'account di questo nutrizionista.', {
+        title: 'Impersona nutrizionista',
+        confirmLabel: 'Continua',
+    });
+    if (!ok) return;
     router.post(route('dev.impersonate', userId));
 }
 

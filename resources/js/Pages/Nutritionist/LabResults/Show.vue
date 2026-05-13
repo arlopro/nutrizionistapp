@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { ArrowLeft, Edit, Trash2, FlaskConical, TrendingUp, TrendingDown, Minus } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 const props = defineProps<{
     labResult: any;
@@ -56,8 +59,13 @@ function trend(key: string) {
 }
 
 const deleting = ref(false);
-function destroy() {
-    if (!confirm('Eliminare questo esame?')) return;
+async function destroy() {
+    const ok = await confirmDialog('L\'esame verrà eliminato definitivamente.', {
+        title: 'Elimina esame',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
     deleting.value = true;
     router.delete(route('nutritionist.lab-results.destroy', props.labResult.id));
 }

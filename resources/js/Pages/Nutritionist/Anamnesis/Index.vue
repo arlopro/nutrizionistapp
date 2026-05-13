@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, FileText, Pencil, Trash2, Star } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 defineProps<{
     templates: {
@@ -14,8 +17,13 @@ defineProps<{
     }[];
 }>();
 
-function deleteTemplate(id: number) {
-    if (!confirm('Eliminare questo template anamnesi?')) return;
+async function deleteTemplate(id: number) {
+    const ok = await confirmDialog('Il template anamnesi verrà eliminato definitivamente.', {
+        title: 'Elimina template anamnesi',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('nutritionist.anamnesis.destroy', id), { preserveScroll: true });
 }
 

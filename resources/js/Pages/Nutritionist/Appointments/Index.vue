@@ -2,6 +2,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref, computed, reactive, nextTick, onMounted } from 'vue';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 import {
     Plus, Calendar, Clock, MapPin, User, X, Trash2, Pencil,
     ChevronLeft, ChevronRight, LayoutList, CalendarDays,
@@ -375,8 +378,13 @@ function submitEdit() {
     });
 }
 
-function deleteAppointment(id: number) {
-    if (!confirm('Eliminare questo appuntamento?')) return;
+async function deleteAppointment(id: number) {
+    const ok = await confirmDialog('L\'appuntamento verrà eliminato definitivamente.', {
+        title: 'Elimina appuntamento',
+        confirmLabel: 'Elimina',
+        danger: true,
+    });
+    if (!ok) return;
     router.delete(route('nutritionist.appointments.destroy', id), { preserveScroll: true });
 }
 

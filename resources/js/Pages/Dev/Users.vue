@@ -2,6 +2,9 @@
 import DevLayout from '@/Layouts/DevLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { UserCog } from 'lucide-vue-next';
+import { useConfirm } from '@/Composables/useConfirm';
+
+const { confirm: confirmDialog } = useConfirm();
 
 defineProps<{
     users: {
@@ -12,8 +15,12 @@ defineProps<{
     };
 }>();
 
-function impersonate(userId: number) {
-    if (!confirm('Vuoi impersonificare questo utente?')) return;
+async function impersonate(userId: number) {
+    const ok = await confirmDialog('Accederai all\'account di questo utente.', {
+        title: 'Impersona utente',
+        confirmLabel: 'Continua',
+    });
+    if (!ok) return;
     router.post(route('dev.impersonate', userId));
 }
 
