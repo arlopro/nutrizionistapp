@@ -313,7 +313,7 @@ function optionLetter(i: number) {
 
                             <!-- CTA row (not for radio/scale — they auto-advance) -->
                             <div
-                                v-if="currentQ?.type !== 'radio' && currentQ?.type !== 'scale'"
+                                v-if="currentQ?.type !== 'radio' && currentQ?.type !== 'scale' && currentQ?.type !== 'checkbox'"
                                 class="tf-cta-row"
                             >
                                 <button class="tf-cta" @click="advance">
