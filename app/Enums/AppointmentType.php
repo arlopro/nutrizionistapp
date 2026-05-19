@@ -8,6 +8,7 @@ enum AppointmentType: string
     case FollowUp = 'follow_up';
     case Online = 'online';
     case Other = 'other';
+    case Blocked = 'blocked';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum AppointmentType: string
             self::FollowUp => 'Controllo',
             self::Online => 'Online',
             self::Other => 'Altro',
+            self::Blocked => 'Slot occupato',
         };
     }
 }

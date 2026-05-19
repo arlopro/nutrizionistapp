@@ -1,0 +1,1 @@
+- [Piano Editoriale Instagram](project-social-content.md) — 9+5 grafiche 3:4, modelli nano_banana_2 e gpt_image_2, salvate in social-content/grafiche/, maggio 2026

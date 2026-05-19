@@ -6,6 +6,7 @@ use App\Enums\MealType;
 use App\Http\Controllers\Controller;
 use App\Models\MealCompletion;
 use App\Models\Recipe;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -63,12 +64,30 @@ class PlanController extends Controller
             }
         }
 
+        // Aderenza per ciascun giorno della settimana corrente (lun=0 … dom=6)
+        $weeklyDayAdherence = array_fill(0, 7, null);
+        if ($plan) {
+            $mealsByDay = $plan->meals->groupBy('day_of_week');
+            $monday = Carbon::now()->startOfWeek(Carbon::MONDAY);
+            for ($i = 0; $i < 7; $i++) {
+                $date = $monday->copy()->addDays($i);
+                $count = ($mealsByDay->get($i) ?? collect())->count();
+                if ($count > 0) {
+                    $completed = MealCompletion::where('client_id', $clientProfile->id)
+                        ->where('date', $date->toDateString())
+                        ->count();
+                    $weeklyDayAdherence[$i] = round(min($completed / $count, 1) * 100);
+                }
+            }
+        }
+
         return Inertia::render('Client/Plan', [
             'plan' => $plan,
             'recipes' => $recipes,
             'mealTypes' => collect(MealType::cases())->map(fn ($m) => ['value' => $m->value, 'label' => $m->label()]),
             'completedMealIds' => $completedMealIds,
             'adherence' => $adherence,
+            'weeklyDayAdherence' => $weeklyDayAdherence,
             'today' => today()->toDateString(),
         ]);
     }

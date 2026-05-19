@@ -1,0 +1,1 @@
+- [Pricing NutrizionistApp](project_pricing.md) — Piani FREE/12€/24€/49€ — FREE come leva acquisizione early adopter

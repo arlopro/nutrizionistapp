@@ -49,8 +49,14 @@ Route::get('/dashboard', function () {
 // Nutritionist routes
 Route::middleware(['auth', 'verified', 'role:nutritionist'])->prefix('nutritionist')->name('nutritionist.')->group(function () {
     Route::get('/dashboard', [NutritionistDashboardController::class, 'index'])->name('dashboard');
+    Route::get('clients/export', [ClientController::class, 'export'])->name('clients.export');
+    Route::get('clients/import-sample', [ClientController::class, 'importSample'])->name('clients.import-sample');
+    Route::post('clients/import', [ClientController::class, 'import'])->name('clients.import');
     Route::resource('clients', ClientController::class);
     Route::post('clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])->name('clients.send-invitation');
+    Route::post('clients/{client}/notes', [ClientController::class, 'addNote'])->name('clients.notes.store');
+    Route::delete('clients/{client}/notes/{index}', [ClientController::class, 'deleteNote'])->name('clients.notes.destroy');
+    Route::post('clients/{client}/check-ins', [NutritionistCheckInController::class, 'storeForClient'])->name('clients.check-ins.store');
     Route::resource('foods', FoodController::class);
     Route::post('foods/{food}/hide', [FoodController::class, 'hide'])->name('foods.hide');
     Route::resource('recipes', RecipeController::class);
@@ -82,6 +88,7 @@ Route::middleware(['auth', 'verified', 'role:nutritionist'])->prefix('nutritioni
     Route::get('check-ins/{checkIn}', [NutritionistCheckInController::class, 'show'])->name('check-ins.show');
     Route::patch('check-ins/{checkIn}/notes', [NutritionistCheckInController::class, 'addNotes'])->name('check-ins.notes');
     Route::patch('check-ins/{checkIn}/review', [NutritionistCheckInController::class, 'review'])->name('check-ins.review');
+    Route::post('check-ins/review-all', [NutritionistCheckInController::class, 'reviewAll'])->name('check-ins.review-all');
     Route::get('check-ins/photo-compare', [NutritionistCheckInController::class, 'photoCompare'])->name('check-ins.photo-compare');
 
     // Appointments
@@ -100,6 +107,7 @@ Route::middleware(['auth', 'verified', 'role:nutritionist'])->prefix('nutritioni
     Route::resource('anamnesis', AnamnesisTemplateController::class)
         ->parameters(['anamnesis' => 'anamnesi'])
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('anamnesis/{anamnesi}/preview', [AnamnesisTemplateController::class, 'preview'])->name('anamnesis.preview');
     Route::post('anamnesis/send', [AnamnesisSubmissionController::class, 'send'])->name('anamnesis.send');
     Route::get('anamnesis/submissions/{submission}', [AnamnesisSubmissionController::class, 'show'])->name('anamnesis.submissions.show');
 

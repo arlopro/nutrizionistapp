@@ -13,6 +13,8 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^7.2",
         "srmklive/paypal": "^3.0",

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, FileText, Pencil, Trash2, Star } from 'lucide-vue-next';
+import { Plus, FileText, Pencil, Trash2, Star, Eye } from 'lucide-vue-next';
 import { useConfirm } from '@/Composables/useConfirm';
 
 const { confirm: confirmDialog } = useConfirm();
@@ -93,6 +93,13 @@ function formatDate(d: string) {
                         </div>
                     </div>
                     <div class="flex items-center gap-1 flex-shrink-0">
+                        <Link
+                            :href="route('nutritionist.anamnesis.preview', tmpl.id)"
+                            class="p-1.5 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-gray-50"
+                            title="Anteprima form cliente"
+                        >
+                            <Eye class="h-4 w-4" />
+                        </Link>
                         <Link
                             :href="route('nutritionist.anamnesis.edit', tmpl.id)"
                             class="p-1.5 text-gray-400 hover:text-primary-600 transition rounded-lg hover:bg-gray-50"

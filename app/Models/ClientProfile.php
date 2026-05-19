@@ -31,6 +31,7 @@ class ClientProfile extends Model
             'status' => ClientStatus::class,
             'allergies' => 'array',
             'intolerances' => 'array',
+            'nutritionist_notes' => 'array',
             'height_cm' => 'decimal:1',
             'initial_weight_kg' => 'decimal:1',
         ];

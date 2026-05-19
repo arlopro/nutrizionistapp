@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Nutritionist;
 use App\Http\Controllers\Controller;
 use App\Models\LabResult;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class LabResultController extends Controller
@@ -61,6 +62,10 @@ class LabResultController extends Controller
 
         // Verify the client belongs to this nutritionist
         $request->user()->clients()->findOrFail($validated['client_id']);
+
+        if ($request->hasFile('file')) {
+            $validated['file_path'] = $request->file('file')->store("lab-results/{$validated['client_id']}", 'public');
+        }
 
         LabResult::create($validated);
 
@@ -131,6 +136,7 @@ class LabResultController extends Controller
             'date' => 'required|date',
             'lab_name' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:2000',
+            'file' => 'nullable|file|mimes:pdf|max:10240',
             'glucose' => 'nullable|numeric|min:0|max:9999',
             'hba1c' => 'nullable|numeric|min:0|max:99',
             'total_cholesterol' => 'nullable|numeric|min:0|max:9999',

@@ -90,6 +90,14 @@ class AnamnesisTemplateController extends Controller
             ->with('success', 'Template aggiornato.');
     }
 
+    public function preview(AnamnesisTemplate $anamnesi)
+    {
+        $this->authorize('view', $anamnesi);
+        return Inertia::render('Nutritionist/Anamnesis/Preview', [
+            'template' => $anamnesi,
+        ]);
+    }
+
     public function destroy(AnamnesisTemplate $anamnesi)
     {
         $this->authorize('delete', $anamnesi);

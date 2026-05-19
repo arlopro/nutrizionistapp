@@ -18,6 +18,7 @@ use App\Services\TdeeCalculator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -358,16 +359,70 @@ class NutritionalPlanController extends Controller
             $logoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);
         }
 
-        $pdf = Pdf::loadView('pdf.plan', [
+        $appLogoPath = public_path('images/logo-nutrizionistapp.png');
+        $appLogoBase64 = file_exists($appLogoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($appLogoPath))
+            : null;
+
+        $sharedData = [
             'plan' => $plan,
             'nutritionist' => $nutritionist,
             'profile' => $profile,
             'logoBase64' => $logoBase64,
-        ])->setPaper('a4', 'portrait');
+            'appLogoBase64' => $appLogoBase64,
+        ];
 
+        // Portrait PDF (main document)
+        $portraitOutput = Pdf::loadView('pdf.plan', $sharedData)
+            ->setPaper('a4', 'portrait')
+            ->setOption('isCompressOutput', false)
+            ->output();
+
+        // Landscape PDF (weekly recap)
+        $landscapeOutput = Pdf::loadView('pdf.plan_weekly', $sharedData)
+            ->setPaper('a4', 'landscape')
+            ->setOption('isCompressOutput', false)
+            ->output();
+
+        // Merge using FPDI
+        $merger = new Fpdi();
+
+        $portraitStream = $this->pdfStringToStream($portraitOutput);
+        $portraitPages = $merger->setSourceFile($portraitStream);
+        for ($i = 1; $i <= $portraitPages; $i++) {
+            $tpl = $merger->importPage($i);
+            $size = $merger->getTemplateSize($tpl);
+            $merger->AddPage(
+                $size['width'] > $size['height'] ? 'L' : 'P',
+                [$size['width'], $size['height']]
+            );
+            $merger->useTemplate($tpl);
+        }
+
+        $landscapeStream = $this->pdfStringToStream($landscapeOutput);
+        $landscapePages = $merger->setSourceFile($landscapeStream);
+        for ($i = 1; $i <= $landscapePages; $i++) {
+            $tpl = $merger->importPage($i);
+            $size = $merger->getTemplateSize($tpl);
+            $merger->AddPage(
+                $size['width'] > $size['height'] ? 'L' : 'P',
+                [$size['width'], $size['height']]
+            );
+            $merger->useTemplate($tpl);
+        }
+
+        $merged = $merger->Output('', 'S');
         $filename = Str::slug($plan->title ?: 'piano-nutrizionale') . '.pdf';
 
-        return $pdf->stream($filename);
+        return response($merged, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function pdfStringToStream(string $content): \setasign\Fpdi\PdfParser\StreamReader
+    {
+        return \setasign\Fpdi\PdfParser\StreamReader::createByString($content);
     }
 
     public function destroy(NutritionalPlan $plan)

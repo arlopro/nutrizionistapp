@@ -47,9 +47,10 @@ class AppointmentController extends Controller
     {
         $validated = $request->validate([
             'client_id'        => 'nullable|exists:client_profiles,id',
-            'new_client_name'  => 'nullable|required_without:client_id|string|max:255',
-            'new_client_email' => 'nullable|required_without:client_id|email|unique:users,email',
+            'new_client_name'  => 'nullable|string|max:255',
+            'new_client_email' => 'nullable|email|unique:users,email',
             'new_client_phone' => 'nullable|string|max:20',
+            'custom_title'     => 'nullable|string|max:255',
             'description'      => 'nullable|string',
             'starts_at'        => 'required|date',
             'ends_at'          => 'required|date|after:starts_at',
@@ -59,7 +60,7 @@ class AppointmentController extends Controller
         ]);
 
         $clientName = null;
-        $clientId   = $validated['client_id'] ?? null;
+        $clientId   = $validated['client_id'] ?: null;
 
         // Inline client creation
         if (!$clientId && !empty($validated['new_client_name']) && !empty($validated['new_client_email'])) {
@@ -83,7 +84,8 @@ class AppointmentController extends Controller
         }
 
         $typeLabel = AppointmentType::tryFrom($validated['type'])?->label() ?? $validated['type'];
-        $title     = $clientName ? "{$typeLabel} — {$clientName}" : $typeLabel;
+        $autoTitle = $clientName ? "{$typeLabel} — {$clientName}" : $typeLabel;
+        $title     = !empty($validated['custom_title']) ? $validated['custom_title'] : $autoTitle;
 
         Appointment::create([
             'client_id'       => $clientId,
@@ -106,14 +108,15 @@ class AppointmentController extends Controller
         $this->authorize('update', $appointment);
 
         $validated = $request->validate([
-            'client_id'   => 'nullable|exists:client_profiles,id',
-            'description' => 'nullable|string',
-            'starts_at'   => 'required|date',
-            'ends_at'     => 'required|date|after:starts_at',
-            'location'    => 'nullable|string|max:255',
-            'type'        => 'required|string',
-            'status'      => 'required|string',
-            'notes'       => 'nullable|string',
+            'client_id'    => 'nullable|exists:client_profiles,id',
+            'custom_title' => 'nullable|string|max:255',
+            'description'  => 'nullable|string',
+            'starts_at'    => 'required|date',
+            'ends_at'      => 'required|date|after:starts_at',
+            'location'     => 'nullable|string|max:255',
+            'type'         => 'required|string',
+            'status'       => 'required|string',
+            'notes'        => 'nullable|string',
         ]);
 
         if ($validated['client_id']) {
@@ -125,9 +128,20 @@ class AppointmentController extends Controller
         }
 
         $typeLabel = AppointmentType::tryFrom($validated['type'])?->label() ?? $validated['type'];
-        $title = $clientName ? "{$typeLabel} — {$clientName}" : $typeLabel;
+        $autoTitle = $clientName ? "{$typeLabel} — {$clientName}" : $typeLabel;
+        $title     = !empty($validated['custom_title']) ? $validated['custom_title'] : $autoTitle;
 
-        $appointment->update([...$validated, 'title' => $title]);
+        $appointment->update([
+            'client_id'   => $validated['client_id'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'starts_at'   => $validated['starts_at'],
+            'ends_at'     => $validated['ends_at'],
+            'location'    => $validated['location'] ?? null,
+            'type'        => $validated['type'],
+            'status'      => $validated['status'],
+            'notes'       => $validated['notes'] ?? null,
+            'title'       => $title,
+        ]);
 
         return back()->with('success', 'Appuntamento aggiornato.');
     }

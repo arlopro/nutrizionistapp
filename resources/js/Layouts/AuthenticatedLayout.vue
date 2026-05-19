@@ -68,7 +68,7 @@ const nutritionistNavGroups: NavGroup[] = [
         label: 'Libreria',
         items: [
             { name: 'Alimenti', href: 'nutritionist.foods.index', icon: Apple },
-            { name: 'Ricette', href: 'nutritionist.recipes.index', icon: CookingPot },
+            // { name: 'Ricette', href: 'nutritionist.recipes.index', icon: CookingPot },
             { name: 'Piani', href: 'nutritionist.plans.index', icon: UtensilsCrossed },
         ],
     },
